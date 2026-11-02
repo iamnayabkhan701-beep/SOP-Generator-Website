@@ -9,6 +9,7 @@ interface AuthContextType {
   isConfigured: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
 }
@@ -112,6 +113,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error: error ? new Error(error.message) : null };
   };
 
+  const signInWithGoogle = async () => {
+    if (!isConfigured) {
+      const demo: User = {
+        ...DEMO_USER,
+        email: 'google.demo@sopify.ai',
+        user_metadata: { full_name: 'Google User (Demo)' },
+      };
+      setUser(demo);
+      localStorage.setItem('sop_demo_logged_in', 'true');
+      return { error: null };
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    return { error: error ? new Error(error.message) : null };
+  };
+
   const signOut = async () => {
     if (!isConfigured) {
       setUser(null);
@@ -142,6 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isConfigured,
         signIn,
         signUp,
+        signInWithGoogle,
         signOut,
         resetPassword,
       }}

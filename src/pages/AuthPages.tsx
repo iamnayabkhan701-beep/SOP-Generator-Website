@@ -18,7 +18,7 @@ export const AuthPages: React.FC<AuthPageProps> = ({ initialMode = 'login' }) =>
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { signIn, signUp, resetPassword, isConfigured } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword, isConfigured } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -251,12 +251,18 @@ export const AuthPages: React.FC<AuthPageProps> = ({ initialMode = 'login' }) =>
           </button>
         </form>
 
-        {/* Social / OAuth placeholder */}
+        {/* Social / OAuth button */}
         <div className="relative border-t border-slate-100 pt-4 text-center">
           <button
             type="button"
-            onClick={() => {
-              alert('Google OAuth can be enabled as soon as you configure OAuth credentials in your Supabase Dashboard under Authentication > Providers > Google.');
+            onClick={async () => {
+              setErrorMsg('');
+              const { error } = await signInWithGoogle();
+              if (error) {
+                setErrorMsg(error.message);
+              } else if (!isConfigured) {
+                navigate(redirectPath);
+              }
             }}
             className="w-full py-2.5 px-4 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center justify-center gap-2"
           >
