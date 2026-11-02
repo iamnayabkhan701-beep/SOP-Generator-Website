@@ -194,6 +194,92 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
     cursorY += summaryLines.length * 4.5 + 6;
   }
 
+  // --- Visual Process Flowchart Shapes ---
+  checkPageBreak(32);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(...palette.primaryDark);
+  doc.text('Visual Process Flowchart & Sequential Milestones', marginX, cursorY);
+  cursorY += 5;
+
+  const flowNodes = [
+    { num: '1', title: 'Initiation', shape: 'capsule' },
+    { num: '2', title: 'Execution', shape: 'rect' },
+    { num: '3', title: 'Verify Gate', shape: 'diamond' },
+    { num: '4', title: 'Resolution', shape: 'rect' },
+    { num: '5', title: 'Approval', shape: 'capsule' },
+  ];
+
+  const nodeWidth = (contentWidth - 16) / 5;
+  const nodeHeight = 12;
+
+  flowNodes.forEach((node, nIdx) => {
+    const nodeX = marginX + nIdx * (nodeWidth + 4);
+
+    // Draw shape
+    doc.setFillColor(...palette.primaryLight);
+    doc.setDrawColor(...palette.primary);
+    doc.setLineWidth(0.3);
+
+    if (node.shape === 'capsule') {
+      doc.roundedRect(nodeX, cursorY, nodeWidth, nodeHeight, 3, 3, 'FD');
+    } else {
+      doc.roundedRect(nodeX, cursorY, nodeWidth, nodeHeight, 1.5, 1.5, 'FD');
+    }
+
+    // Step Number Badge
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...palette.primaryDark);
+    doc.text(`Stage ${node.num}`, nodeX + nodeWidth / 2, cursorY + 4.5, { align: 'center' });
+
+    // Step Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...palette.text);
+    doc.text(node.title, nodeX + nodeWidth / 2, cursorY + 9, { align: 'center' });
+
+    // Connector Arrow
+    if (nIdx < 4) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...palette.primary);
+      doc.text('>', nodeX + nodeWidth + 1.2, cursorY + 7);
+    }
+  });
+
+  cursorY += nodeHeight + 7;
+
+  // --- Visual Quality & KPI Benchmarks Table ---
+  checkPageBreak(30);
+  autoTable(doc, {
+    startY: cursorY,
+    margin: { left: marginX, right: marginX },
+    head: [['Operational KPI / Metric', 'Current Benchmark', 'Target SLA', 'Compliance Status']],
+    body: [
+      ['First-Pass Yield / Success Rate', '98.4%', '99.0%', 'Optimal / Pass'],
+      ['Standard Procedure Adherence', '100%', '100%', 'Fully Compliant'],
+      ['Incident SLA Resolution Time', '12.5 min', '15.0 min', 'Within Limit'],
+      ['Defect / Error Rate Tolerance', '0.04%', '0.10%', 'Compliant (Zero Defect Zone)'],
+    ],
+    theme: 'grid',
+    styles: {
+      fontSize: 7.5,
+      cellPadding: 2,
+      textColor: palette.text,
+      lineColor: palette.border,
+      lineWidth: 0.15,
+    },
+    headStyles: {
+      fillColor: palette.primaryDark,
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+    },
+  });
+
+  // @ts-expect-error - autoTable adds lastAutoTable
+  cursorY = (doc.lastAutoTable?.finalY || cursorY) + 7;
+
   // --- Sections Rendering ---
   content.sections.forEach((sec, idx) => {
     checkPageBreak(18);

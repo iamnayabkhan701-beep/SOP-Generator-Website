@@ -111,14 +111,6 @@ export const AuthPages: React.FC<AuthPageProps> = ({ initialMode = 'login' }) =>
           </p>
         </div>
 
-        {/* Demo Mode Notice */}
-        {!isConfigured && (
-          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Supabase is in local testing mode. You can sign up with any email & password to test!</span>
-          </div>
-        )}
-
         {/* Feedback alerts */}
         {errorMsg && (
           <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5">
@@ -260,8 +252,6 @@ export const AuthPages: React.FC<AuthPageProps> = ({ initialMode = 'login' }) =>
               const { error } = await signInWithGoogle();
               if (error) {
                 setErrorMsg(error.message);
-              } else if (!isConfigured) {
-                navigate(redirectPath);
               }
             }}
             className="w-full py-2.5 px-4 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center justify-center gap-2"

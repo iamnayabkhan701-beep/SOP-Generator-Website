@@ -17,6 +17,12 @@ import {
   Check,
   Sparkles,
   Share2,
+  GitBranch,
+  BarChart3,
+  Image as ImageIcon,
+  TrendingUp,
+  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext';
@@ -28,6 +34,7 @@ import {
 } from '../lib/supabase';
 import type { SOPDocument, SOPGeneratedContent, SOPSection, SOPTheme } from '../types/sop';
 import { generateSOPPdf } from '../lib/pdfGenerator';
+import { getAutomaticSOPImages } from '../lib/imageFetcher';
 
 export const SOPPreview: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -363,6 +370,196 @@ export const SOPPreview: React.FC = () => {
                 </p>
               </div>
             )}
+
+            {/* Visual Process Flowchart with Shapes */}
+            <div className="space-y-3 border border-slate-200/90 rounded-2xl p-6 bg-slate-50/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-brand-50 text-brand-600">
+                    <GitBranch className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                    Visual Process Flowchart & Sequential Milestones
+                  </h3>
+                </div>
+                <span className="text-[10px] font-bold text-brand-600 uppercase tracking-widest bg-brand-50 px-2 py-0.5 rounded">
+                  Flow Diagram
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-3">
+                {[
+                  {
+                    step: 1,
+                    title: 'Initiation',
+                    desc: 'Pre-check & credentials',
+                    shape: 'capsule',
+                    role: content.metadata?.preparedBy || 'Operator',
+                    bg: 'bg-emerald-50 border-emerald-300 text-emerald-900',
+                  },
+                  {
+                    step: 2,
+                    title: 'Execution',
+                    desc: 'Core workflow actions',
+                    shape: 'rect',
+                    role: 'Specialist',
+                    bg: 'bg-brand-50 border-brand-300 text-brand-900',
+                  },
+                  {
+                    step: 3,
+                    title: 'Verification',
+                    desc: 'Quality & safety checks',
+                    shape: 'diamond',
+                    role: content.metadata?.reviewedBy || 'QA Inspector',
+                    bg: 'bg-amber-50 border-amber-300 text-amber-900',
+                  },
+                  {
+                    step: 4,
+                    title: 'Resolution',
+                    desc: 'Defect / rollback plan',
+                    shape: 'rect',
+                    role: 'Escalation Lead',
+                    bg: 'bg-purple-50 border-purple-300 text-purple-900',
+                  },
+                  {
+                    step: 5,
+                    title: 'Approval',
+                    desc: 'Sign-off & log audit',
+                    shape: 'capsule',
+                    role: content.metadata?.approvedBy || 'Approver',
+                    bg: 'bg-slate-100 border-slate-300 text-slate-900',
+                  },
+                ].map((node, nIdx) => (
+                  <div key={node.step} className="flex flex-col items-center text-center relative group">
+                    <div
+                      className={`w-full p-3.5 border-2 transition-transform hover:-translate-y-0.5 shadow-sm space-y-1 ${node.bg} ${
+                        node.shape === 'capsule'
+                          ? 'rounded-full px-4'
+                          : node.shape === 'diamond'
+                          ? 'rounded-2xl rotate-0 border-dashed'
+                          : 'rounded-xl'
+                      }`}
+                    >
+                      <span className="inline-block w-5 h-5 rounded-full bg-white/80 font-bold text-[10px] leading-5 text-slate-800 shadow-xs mb-0.5">
+                        {node.step}
+                      </span>
+                      <h4 className="text-xs font-bold leading-tight block truncate">{node.title}</h4>
+                      <p className="text-[10px] opacity-80 leading-tight">{node.desc}</p>
+                      <span className="text-[9px] font-mono opacity-70 block pt-0.5 truncate">
+                        Role: {node.role}
+                      </span>
+                    </div>
+
+                    {nIdx < 4 && (
+                      <div className="hidden sm:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-slate-400">
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Automatically Retrieved Domain Images */}
+            {(() => {
+              const displayImages =
+                content.images && content.images.length > 0
+                  ? content.images
+                  : getAutomaticSOPImages(doc.category, doc.title);
+
+              if (!displayImages || displayImages.length === 0) return null;
+
+              return (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+                        <ImageIcon className="w-4 h-4" />
+                      </div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                        Document Reference Figures & Operational Visuals
+                      </h3>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Auto-sourced for {doc.category.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {displayImages.map((img, iIdx) => (
+                      <div
+                        key={iIdx}
+                        className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm flex flex-col justify-between"
+                      >
+                        <div className="relative aspect-video bg-slate-100 overflow-hidden">
+                          <img
+                            src={img.url}
+                            alt={img.alt}
+                            crossOrigin="anonymous"
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="p-3 bg-slate-50/80 border-t border-slate-100">
+                          <p className="text-xs font-medium text-slate-700 italic">
+                            {img.caption}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Visual KPI & Performance Benchmark Charts */}
+            <div className="space-y-3 border border-slate-200/90 rounded-2xl p-6 bg-white shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+                    <BarChart3 className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                    Quality Benchmarks & Performance Metrics
+                  </h3>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                  ISO / Operational KPI
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                {[
+                  { label: 'First-Pass Yield', current: 98.4, target: 99.0, unit: '%', color: 'bg-emerald-500' },
+                  { label: 'Procedure Compliance', current: 100, target: 100, unit: '%', color: 'bg-brand-500' },
+                  { label: 'Incident SLA Resolution', current: 12.5, target: 15.0, unit: 'min', color: 'bg-indigo-500' },
+                  { label: 'Defect / Error Rate', current: 0.04, target: 0.10, unit: '%', color: 'bg-amber-500' },
+                ].map((item, bIdx) => (
+                  <div key={bIdx} className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/70 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-slate-700">{item.label}</span>
+                      <span className="font-mono font-bold text-slate-900">
+                        {item.current}{item.unit}
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${item.color}`}
+                        style={{ width: `${Math.min(100, (item.current / (item.target || 100)) * 100)}%` }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                      <span>Target: {item.target}{item.unit}</span>
+                      <span className="text-emerald-600 font-semibold flex items-center gap-0.5">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Optimal
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Sections List */}
             <div className="space-y-6">

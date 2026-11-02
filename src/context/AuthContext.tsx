@@ -115,20 +115,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     if (!isConfigured) {
-      const demo: User = {
-        ...DEMO_USER,
-        email: 'google.demo@sopify.ai',
-        user_metadata: { full_name: 'Google User (Demo)' },
+      return {
+        error: new Error(
+          'Google OAuth requires Supabase to be configured in the Admin Panel (/admin). Please configure your Supabase Project URL first.'
+        ),
       };
-      setUser(demo);
-      localStorage.setItem('sop_demo_logged_in', 'true');
-      return { error: null };
     }
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
       },
     });
     return { error: error ? new Error(error.message) : null };

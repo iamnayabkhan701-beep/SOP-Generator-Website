@@ -116,6 +116,23 @@ export interface SOPFormData {
   };
 }
 
+export interface FlowchartStep {
+  id: string;
+  stepNumber: number;
+  label: string;
+  description: string;
+  role: string;
+  shape: 'start' | 'process' | 'decision' | 'end';
+}
+
+export interface MetricBenchmark {
+  label: string;
+  current: number;
+  target: number;
+  unit: string;
+  status: 'optimal' | 'warning' | 'critical';
+}
+
 export interface SOPGeneratedContent {
   documentTitle: string;
   organization: string;
@@ -130,6 +147,16 @@ export interface SOPGeneratedContent {
   };
   executiveSummary?: string;
   disclaimer?: string;
+  flowchart?: FlowchartStep[];
+  metricsChart?: {
+    title: string;
+    benchmarks: MetricBenchmark[];
+  };
+  images?: {
+    url: string;
+    caption: string;
+    alt: string;
+  }[];
   sections: SOPSection[];
 }
 

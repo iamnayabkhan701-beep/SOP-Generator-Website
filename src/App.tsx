@@ -9,6 +9,7 @@ import { Dashboard } from './pages/Dashboard';
 import { SOPWizard } from './pages/SOPWizard';
 import { SOPPreview } from './pages/SOPPreview';
 import { Settings } from './pages/Settings';
+import { AdminPanel } from './pages/AdminPanel';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -91,6 +92,7 @@ export const AppContent: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route path="/admin" element={<AdminPanel />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

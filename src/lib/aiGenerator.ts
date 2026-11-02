@@ -1,4 +1,14 @@
-import type { SOPFormData, SOPGeneratedContent, SOPCategory, SOPStructure, SOPTheme, SOPSection } from '../types/sop';
+import type {
+  SOPFormData,
+  SOPGeneratedContent,
+  SOPCategory,
+  SOPStructure,
+  SOPTheme,
+  SOPSection,
+  FlowchartStep,
+  MetricBenchmark,
+} from '../types/sop';
+import { getAutomaticSOPImages } from './imageFetcher';
 
 interface GenerateOptions {
   category: SOPCategory;
@@ -59,6 +69,11 @@ export async function generateSOP(options: GenerateOptions): Promise<SOPGenerate
     disclaimer = `CRITICAL REVIEW NOTICE: This SOP pertains to ${category.toUpperCase()}, a regulated or safety-critical operational domain. Under no circumstances should this procedure be deployed without comprehensive review and sign-off by a qualified compliance or domain officer. AI generation does not substitute certified regulatory, legal, or health standards.`;
   }
 
+  // Build flowchart, metrics charts, and automatic domain imagery
+  const flowchart = buildFlowchartSteps(category, formData);
+  const metricsChart = buildMetricsChart(category, formData);
+  const images = getAutomaticSOPImages(category, formData.title);
+
   const generated: SOPGeneratedContent = {
     documentTitle: formData.title || 'Standard Operating Procedure',
     organization: formData.companyName || 'Enterprise Organization',
@@ -75,10 +90,94 @@ export async function generateSOP(options: GenerateOptions): Promise<SOPGenerate
       ? `This procedure establishes the formal protocol for ${formData.title.toLowerCase()} across ${formData.department || 'all relevant departments'}. Its primary objective is to maintain consistency, operational efficiency, and risk mitigation.`
       : `Standard operating protocol for ${formData.title}.`,
     disclaimer,
+    flowchart,
+    metricsChart,
+    images,
     sections,
   };
 
   return generated;
+}
+
+function buildFlowchartSteps(category: SOPCategory, formData: SOPFormData): FlowchartStep[] {
+  return [
+    {
+      id: 'flow-1',
+      stepNumber: 1,
+      label: 'Pre-Operational Initiation',
+      description: 'Verify prerequisites, credentials, and facility readiness checklists.',
+      role: formData.preparedBy || 'Primary Operator',
+      shape: 'start',
+    },
+    {
+      id: 'flow-2',
+      stepNumber: 2,
+      label: 'Core Procedural Action',
+      description: 'Execute baseline operational workflow per technical parameters.',
+      role: 'Designated Specialist',
+      shape: 'process',
+    },
+    {
+      id: 'flow-3',
+      stepNumber: 3,
+      label: 'Quality & Safety Verification Gate',
+      description: 'Evaluate against critical tolerances and safety inspection rules.',
+      role: formData.reviewedBy || 'QA / Supervisor',
+      shape: 'decision',
+    },
+    {
+      id: 'flow-4',
+      stepNumber: 4,
+      label: 'Deviation / Escalation Path',
+      description: 'If non-conformance is detected, halt run and trigger rollback plan.',
+      role: 'Escalation Officer',
+      shape: 'process',
+    },
+    {
+      id: 'flow-5',
+      stepNumber: 5,
+      label: 'Formal Handover & Archival',
+      description: 'Log telemetry in repository and complete authorization sign-offs.',
+      role: formData.approvedBy || 'Department Head',
+      shape: 'end',
+    },
+  ];
+}
+
+function buildMetricsChart(category: SOPCategory, formData: SOPFormData): { title: string; benchmarks: MetricBenchmark[] } {
+  return {
+    title: 'Operational KPI & Quality Threshold Benchmarks',
+    benchmarks: [
+      {
+        label: 'First-Pass Yield / Success Rate',
+        current: 98.4,
+        target: 99.0,
+        unit: '%',
+        status: 'optimal',
+      },
+      {
+        label: 'Procedure Adherence Audit',
+        current: 100,
+        target: 100,
+        unit: '%',
+        status: 'optimal',
+      },
+      {
+        label: 'Incident Resolution / SLA Time',
+        current: 12.5,
+        target: 15.0,
+        unit: 'min',
+        status: 'optimal',
+      },
+      {
+        label: 'Discrepancy & Defect Tolerance',
+        current: 0.04,
+        target: 0.10,
+        unit: '%',
+        status: 'optimal',
+      },
+    ],
+  };
 }
 
 function buildStructuredSections(

@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FileText, PlusCircle, Database, LogOut, User as UserIcon, Menu, X, Sparkles, FolderKanban } from 'lucide-react';
+import { FileText, PlusCircle, LogOut, User as UserIcon, Menu, X, Sparkles, FolderKanban, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { SupabaseModal } from './SupabaseModal';
 
 export const Navbar: React.FC = () => {
-  const { user, signOut, isConfigured } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showDbModal, setShowDbModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
 
@@ -91,21 +89,6 @@ export const Navbar: React.FC = () => {
 
             {/* Right actions */}
             <div className="hidden md:flex items-center gap-3">
-              {/* Supabase Status Pill */}
-              <button
-                onClick={() => setShowDbModal(true)}
-                title="Click to configure Supabase"
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-                  isConfigured
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                    : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 animate-pulse'
-                }`}
-              >
-                <span className={`w-2 h-2 rounded-full ${isConfigured ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                <Database className="w-3.5 h-3.5" />
-                <span>{isConfigured ? 'Supabase Active' : 'Connect Supabase'}</span>
-              </button>
-
               {user ? (
                 <div className="relative">
                   <button
@@ -136,16 +119,14 @@ export const Navbar: React.FC = () => {
                         <UserIcon className="w-4 h-4 text-slate-400" />
                         Account Settings
                       </Link>
-                      <button
-                        onClick={() => {
-                          setUserDropdown(false);
-                          setShowDbModal(true);
-                        }}
-                        className="w-full text-left flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 font-medium"
+                      <Link
+                        to="/admin"
+                        onClick={() => setUserDropdown(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 font-medium"
                       >
-                        <Database className="w-4 h-4 text-slate-400" />
-                        Database Settings
-                      </button>
+                        <ShieldCheck className="w-4 h-4 text-slate-400" />
+                        Admin Panel
+                      </Link>
                       <div className="border-t border-slate-100 my-1"></div>
                       <button
                         onClick={handleSignOut}
@@ -178,14 +159,6 @@ export const Navbar: React.FC = () => {
 
             {/* Mobile menu button */}
             <div className="flex md:hidden items-center gap-2">
-              <button
-                onClick={() => setShowDbModal(true)}
-                className={`p-2 rounded-lg border ${
-                  isConfigured ? 'text-emerald-600 border-emerald-200' : 'text-amber-600 border-amber-200'
-                }`}
-              >
-                <Database className="w-4 h-4" />
-              </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition"
@@ -264,9 +237,6 @@ export const Navbar: React.FC = () => {
           </div>
         )}
       </nav>
-
-      {/* Supabase connection modal */}
-      <SupabaseModal isOpen={showDbModal} onClose={() => setShowDbModal(false)} />
     </>
   );
 };
