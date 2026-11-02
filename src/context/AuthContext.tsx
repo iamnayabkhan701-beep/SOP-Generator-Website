@@ -114,25 +114,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithGoogle = async () => {
-    if (!isConfigured) {
-      return {
-        error: new Error(
-          'Google OAuth requires Supabase to be configured in the Admin Panel (/admin). Please configure your Supabase Project URL first.'
-        ),
-      };
-    }
+    try {
+      if (!isConfigured) {
+        return {
+          error: new Error(
+            'Google Sign-In service is temporarily unavailable. Please sign in with email and password below.'
+          ),
+        };
+      }
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'select_account',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account',
+          },
         },
-      },
-    });
-    return { error: error ? new Error(error.message) : null };
+      });
+      return { error: error ? new Error(error.message) : null };
+    } catch (err: any) {
+      return { error: new Error(err?.message || 'Failed to initialize Google authentication.') };
+    }
   };
 
   const signOut = async () => {
