@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 import type { SOPGeneratedContent, SOPTheme, SOPStructure } from '../types/sop';
 
 interface PDFExportOptions {
@@ -61,6 +62,104 @@ const THEME_PALETTES: Record<SOPTheme, ThemePalette> = {
   },
 };
 
+// ==============================================================
+// VISUAL PDF EXPORT: Captures exact on-screen DOM with images,
+// shapes, flowcharts, KPI gauges, and colors via html2canvas
+// ==============================================================
+export async function generateSOPPdfFromElement(
+  element: HTMLElement,
+  content: SOPGeneratedContent,
+  filename?: string
+): Promise<{ blob: Blob; pageCount: number; filename: string }> {
+  const A4_WIDTH_MM = 210;
+  const A4_HEIGHT_MM = 297;
+  const SCALE = 2; // Retina quality rendering
+
+  // Wait for any images inside the element to fully load before capturing
+  const images = element.querySelectorAll('img');
+  await Promise.all(
+    Array.from(images).map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      });
+    })
+  );
+
+  const canvas = await html2canvas(element, {
+    scale: SCALE,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+    imageTimeout: 15000,
+    onclone: (clonedDoc) => {
+      const imgs = clonedDoc.querySelectorAll('img');
+      imgs.forEach((img) => {
+        img.style.display = 'block';
+        img.crossOrigin = 'anonymous';
+      });
+    },
+  });
+
+  const canvasWidthMM = A4_WIDTH_MM;
+  const canvasHeightMM = (canvas.height / canvas.width) * A4_WIDTH_MM;
+  const pageCount = Math.max(1, Math.ceil(canvasHeightMM / A4_HEIGHT_MM));
+
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  for (let i = 0; i < pageCount; i++) {
+    if (i > 0) doc.addPage();
+
+    const srcY = (i * A4_HEIGHT_MM * canvas.width) / canvasWidthMM;
+    const srcHeight = Math.min(
+      (A4_HEIGHT_MM * canvas.width) / canvasWidthMM,
+      canvas.height - srcY
+    );
+
+    const pageCanvas = document.createElement('canvas');
+    pageCanvas.width = canvas.width;
+    pageCanvas.height = srcHeight;
+    const ctx = pageCanvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx.drawImage(
+        canvas,
+        0, srcY, canvas.width, srcHeight,
+        0, 0, pageCanvas.width, srcHeight
+      );
+    }
+
+    const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+    const sliceHeightMM = (srcHeight / canvas.width) * canvasWidthMM;
+
+    doc.addImage(pageImgData, 'JPEG', 0, 0, A4_WIDTH_MM, sliceHeightMM);
+  }
+
+  const safeTitle = (filename || content.documentTitle || 'SOP_Document')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .slice(0, 40);
+  const outFilename = `${safeTitle}_v${content.metadata?.version || '1'}.pdf`;
+
+  const blob = doc.output('blob');
+
+  return {
+    blob,
+    pageCount,
+    filename: outFilename,
+  };
+}
+
+// ==============================================================
+// DIRECT JSPDF FALLBACK (used when DOM is not rendered)
+// ==============================================================
 export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob: Blob; pageCount: number; filename: string }> {
   const { content, theme, structure, organizationName } = options;
   const palette = THEME_PALETTES[theme] || THEME_PALETTES['professional-blue'];
@@ -159,7 +258,7 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
   // --- Review / Compliance Disclaimer ---
   if (content.disclaimer) {
     checkPageBreak(20);
-    doc.setFillColor(254, 242, 242); // light red/amber
+    doc.setFillColor(254, 242, 242);
     doc.setDrawColor(248, 113, 113);
     doc.roundedRect(marginX, cursorY, contentWidth, 14, 1.5, 1.5, 'FD');
 
@@ -216,7 +315,6 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
   flowNodes.forEach((node, nIdx) => {
     const nodeX = marginX + nIdx * (nodeWidth + 4);
 
-    // Draw shape
     doc.setFillColor(...palette.primaryLight);
     doc.setDrawColor(...palette.primary);
     doc.setLineWidth(0.3);
@@ -227,19 +325,16 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
       doc.roundedRect(nodeX, cursorY, nodeWidth, nodeHeight, 1.5, 1.5, 'FD');
     }
 
-    // Step Number Badge
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(...palette.primaryDark);
     doc.text(`Stage ${node.num}`, nodeX + nodeWidth / 2, cursorY + 4.5, { align: 'center' });
 
-    // Step Title
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
     doc.setTextColor(...palette.text);
     doc.text(node.title, nodeX + nodeWidth / 2, cursorY + 9, { align: 'center' });
 
-    // Connector Arrow
     if (nIdx < 4) {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
@@ -281,10 +376,9 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
   cursorY = (doc.lastAutoTable?.finalY || cursorY) + 7;
 
   // --- Sections Rendering ---
-  content.sections.forEach((sec, idx) => {
+  content.sections.forEach((sec) => {
     checkPageBreak(18);
 
-    // Section Title with underline bar
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(...palette.primary);
@@ -296,7 +390,6 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
     doc.line(marginX, cursorY, marginX + contentWidth, cursorY);
     cursorY += 4.5;
 
-    // Section Content
     if (sec.content) {
       checkPageBreak(12);
       doc.setFont('helvetica', 'normal');
@@ -307,7 +400,6 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
       cursorY += contentLines.length * 4.5 + 3;
     }
 
-    // Section Items (Steps or Checklists)
     if (sec.items && sec.items.length > 0) {
       sec.items.forEach((item, itemIdx) => {
         checkPageBreak(9);
@@ -316,14 +408,12 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
         doc.setTextColor(...palette.text);
 
         if (sec.type === 'checklist') {
-          // Render checklist checkbox
           doc.setDrawColor(...palette.primary);
           doc.rect(marginX, cursorY - 3, 3.2, 3.2);
           const itemLines = doc.splitTextToSize(item, contentWidth - 7);
           doc.text(itemLines, marginX + 6, cursorY);
           cursorY += itemLines.length * 4.2 + 2;
         } else {
-          // Render numbered badge / bullet
           const stepNum = `${itemIdx + 1}.`;
           doc.setFont('helvetica', 'bold');
           doc.setTextColor(...palette.primary);
@@ -339,7 +429,6 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
       cursorY += 2;
     }
 
-    // Section Table Data
     if (sec.tableData && sec.tableData.headers && sec.tableData.rows) {
       checkPageBreak(25);
       autoTable(doc, {
@@ -408,7 +497,6 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
 
-    // Running Header (pages 2+)
     if (i > 1) {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.5);
@@ -423,7 +511,6 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
       doc.line(marginX, 12, marginX + contentWidth, 12);
     }
 
-    // Running Footer (all pages)
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(...palette.mutedText);
@@ -449,4 +536,3 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
     filename,
   };
 }
-

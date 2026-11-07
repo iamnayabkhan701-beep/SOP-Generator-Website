@@ -54,7 +54,9 @@ const saveLocalDocs = (docs: SOPDocument[]) => {
 export async function fetchUserDocuments(userId: string): Promise<SOPDocument[]> {
   if (!isSupabaseConfigured()) {
     const local = getLocalDocs();
-    return local.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    return local
+      .filter((d) => d.user_id === userId)
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
   }
 
   const { data, error } = await supabase
@@ -64,29 +66,38 @@ export async function fetchUserDocuments(userId: string): Promise<SOPDocument[]>
     .order('updated_at', { ascending: false });
 
   if (error) {
-    console.error('Supabase fetch error, falling back to local docs:', error);
-    return getLocalDocs();
+    console.error('Supabase fetch error, falling back to user local docs:', error);
+    return getLocalDocs().filter((d) => d.user_id === userId);
   }
 
   return (data as SOPDocument[]) || [];
 }
 
-export async function fetchDocumentById(id: string): Promise<SOPDocument | null> {
+export async function fetchDocumentById(id: string, userId?: string): Promise<SOPDocument | null> {
   if (!isSupabaseConfigured()) {
     const local = getLocalDocs();
-    return local.find((d) => d.id === id) || null;
+    const doc = local.find((d) => d.id === id);
+    if (!doc) return null;
+    if (userId && doc.user_id !== userId) {
+      console.warn('Unauthorized access attempt to document:', id);
+      return null;
+    }
+    return doc;
   }
 
-  const { data, error } = await supabase
-    .from('sop_documents')
-    .select('*')
-    .eq('id', id)
-    .single();
+  let query = supabase.from('sop_documents').select('*').eq('id', id);
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+
+  const { data, error } = await query.single();
 
   if (error) {
     console.error('Supabase fetch by id error:', error);
     const local = getLocalDocs();
-    return local.find((d) => d.id === id) || null;
+    const doc = local.find((d) => d.id === id);
+    if (doc && (!userId || doc.user_id === userId)) return doc;
+    return null;
   }
 
   return data as SOPDocument;
@@ -156,13 +167,21 @@ export async function updateSOPDocument(id: string, updates: Partial<SOPDocument
   return updatedDoc;
 }
 
-export async function deleteSOPDocument(id: string): Promise<boolean> {
-  // Remove from local cache
+export async function deleteSOPDocument(id: string, userId?: string): Promise<boolean> {
   const local = getLocalDocs();
+  const target = local.find((d) => d.id === id);
+  if (target && userId && target.user_id !== userId) {
+    console.warn('Unauthorized attempt to delete document:', id);
+    return false;
+  }
   saveLocalDocs(local.filter((d) => d.id !== id));
 
   if (isSupabaseConfigured()) {
-    const { error } = await supabase.from('sop_documents').delete().eq('id', id);
+    let query = supabase.from('sop_documents').delete().eq('id', id);
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+    const { error } = await query;
     if (error) {
       console.error('Supabase delete error:', error);
       return false;

@@ -9,6 +9,19 @@ export type SOPCategory =
   | 'finance'
   | 'customer-service'
   | 'operations'
+  | 'warehouse'
+  | 'supply-chain'
+  | 'logistics'
+  | 'construction'
+  | 'retail'
+  | 'food-service'
+  | 'cybersecurity'
+  | 'environmental'
+  | 'sales'
+  | 'marketing'
+  | 'legal'
+  | 'remote-work'
+  | 'procurement'
   | 'custom';
 
 export type SOPTheme =
@@ -24,6 +37,11 @@ export type SOPStructure =
   | 'checklist'
   | 'table'
   | 'step-by-step'
+  | 'raci-matrix'
+  | 'iso-9001'
+  | 'lean-six-sigma'
+  | 'quick-reference'
+  | 'visual-workflow'
   | 'custom';
 
 export type TargetPageLength = 'short' | 'standard' | 'detailed' | 'custom';
@@ -109,6 +127,67 @@ export interface SOPFormData {
     complianceStandard?: string;
     auditTrailRequirements?: string;
     approvalThresholds?: string;
+
+    // Warehouse
+    storageZones?: string;
+    inventorySystem?: string;
+    pickPackShip?: string;
+    receivingDock?: string;
+
+    // Supply Chain / Procurement
+    supplierQualification?: string;
+    purchaseOrderProcess?: string;
+    leadTimeRequirements?: string;
+
+    // Logistics
+    shippingCarriers?: string;
+    deliveryZones?: string;
+    trackingSystem?: string;
+
+    // Construction
+    siteHazards?: string;
+    permitRequirements?: string;
+    equipmentInspection?: string;
+
+    // Retail
+    storeOpenClose?: string;
+    cashHandling?: string;
+    inventoryCount?: string;
+
+    // Food Service
+    foodSafetyStandards?: string;
+    allergenManagement?: string;
+    cleaningSanitizing?: string;
+
+    // Cybersecurity
+    incidentClassification?: string;
+    containmentProcedures?: string;
+    forensicsProtocol?: string;
+
+    // Environmental
+    wasteManagement?: string;
+    emissionsMonitoring?: string;
+    complianceReporting?: string;
+
+    // Sales
+    leadQualification?: string;
+    crmSystem?: string;
+    closingProcess?: string;
+
+    // Marketing
+    campaignBrief?: string;
+    contentApproval?: string;
+    analyticsTracking?: string;
+
+    // Legal
+    documentRetention?: string;
+    contractReview?: string;
+    complianceAudit?: string;
+
+    // Remote Work
+    communicationProtocols?: string;
+    securityRequirements?: string;
+    performanceTracking?: string;
 
     // Custom
     customCategoryName?: string;
@@ -212,7 +291,7 @@ export const CATEGORIES: CategoryMetadata[] = [
     iconName: 'Server'
   },
   {
-    id: 'workplace-safety' as SOPCategory,
+    id: 'safety',
     name: 'Workplace Safety & EHS',
     description: 'Hazard identification, PPE standards, emergency responses, and OSHA/EHS best practices.',
     iconName: 'ShieldAlert',
@@ -266,6 +345,96 @@ export const CATEGORIES: CategoryMetadata[] = [
     name: 'General Business Operations',
     description: 'Cross-functional operations, supplier management, logistics, and standard daily routines.',
     iconName: 'Layers'
+  },
+  {
+    id: 'warehouse',
+    name: 'Warehouse Management',
+    description: 'Receiving, storage zones, inventory control, pick-pack-ship, and cycle counting procedures.',
+    iconName: 'Warehouse',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Warehouse safety procedures (forklift, racking, hazardous materials) must be verified by a qualified safety officer.'
+  },
+  {
+    id: 'supply-chain',
+    name: 'Supply Chain Management',
+    description: 'Supplier qualification, purchase orders, demand planning, and procurement workflows.',
+    iconName: 'GitBranch'
+  },
+  {
+    id: 'logistics',
+    name: 'Logistics & Distribution',
+    description: 'Outbound shipments, carrier selection, delivery scheduling, and last-mile tracking.',
+    iconName: 'Truck'
+  },
+  {
+    id: 'construction',
+    name: 'Construction & Site Safety',
+    description: 'Site permits, equipment inspection, scaffolding standards, and fall protection procedures.',
+    iconName: 'HardHat',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Construction safety SOPs must comply with OSHA 29 CFR 1926 and be verified by a certified site safety officer.'
+  },
+  {
+    id: 'retail',
+    name: 'Retail Operations',
+    description: 'Store opening/closing, cash handling, inventory counting, and loss prevention procedures.',
+    iconName: 'ShoppingBag'
+  },
+  {
+    id: 'food-service',
+    name: 'Food Service & Restaurant',
+    description: 'Food safety standards, allergen management, HACCP plans, and kitchen cleaning protocols.',
+    iconName: 'ChefHat',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Food safety SOPs must comply with FDA Food Code and local health department regulations.'
+  },
+  {
+    id: 'cybersecurity',
+    name: 'Cybersecurity & Incident Response',
+    description: 'Incident triage, containment, forensics, breach notification, and security hardening.',
+    iconName: 'ShieldCheck',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Cybersecurity incident response plans should be reviewed by a certified CISO or security professional.'
+  },
+  {
+    id: 'environmental',
+    name: 'Environmental Compliance',
+    description: 'Waste management, emissions monitoring, sustainability reporting, and EPA compliance.',
+    iconName: 'Leaf',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Environmental compliance SOPs must be verified against applicable EPA, ISO 14001, and local regulations.'
+  },
+  {
+    id: 'sales',
+    name: 'Sales Process & CRM',
+    description: 'Lead qualification, pipeline management, proposal creation, and deal closing workflows.',
+    iconName: 'TrendingUp'
+  },
+  {
+    id: 'marketing',
+    name: 'Marketing Operations',
+    description: 'Campaign planning, content approval, social media management, and analytics reporting.',
+    iconName: 'Megaphone'
+  },
+  {
+    id: 'legal',
+    name: 'Legal & Compliance',
+    description: 'Contract review, document retention, regulatory filings, and compliance audit procedures.',
+    iconName: 'Scale',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Legal compliance SOPs must be reviewed by qualified legal counsel before implementation.'
+  },
+  {
+    id: 'remote-work',
+    name: 'Remote Work Policy',
+    description: 'Communication protocols, home office security, performance tracking, and collaboration tools.',
+    iconName: 'Laptop'
+  },
+  {
+    id: 'procurement',
+    name: 'Procurement & Purchasing',
+    description: 'Vendor selection, RFP process, purchase approval workflows, and contract management.',
+    iconName: 'ClipboardList'
   },
   {
     id: 'custom',
@@ -340,10 +509,39 @@ export const STRUCTURES: { id: SOPStructure; name: string; description: string; 
     badge: 'Clear Flow'
   },
   {
+    id: 'raci-matrix',
+    name: 'RACI Responsibility Matrix',
+    description: 'Role-based format mapping Responsible, Accountable, Consulted, and Informed parties for every task.',
+    badge: 'Role Clarity'
+  },
+  {
+    id: 'iso-9001',
+    name: 'ISO 9001 Compliant Format',
+    description: 'Structured to meet ISO 9001:2015 quality management system documentation requirements.',
+    badge: 'ISO Standard'
+  },
+  {
+    id: 'lean-six-sigma',
+    name: 'Lean / Six Sigma DMAIC',
+    description: 'Define-Measure-Analyze-Improve-Control framework for process optimization and waste reduction.',
+    badge: 'Process Excellence'
+  },
+  {
+    id: 'quick-reference',
+    name: 'Quick Reference Card',
+    description: 'Condensed 1-page summary with critical steps, key contacts, and emergency actions.',
+    badge: 'At-a-Glance'
+  },
+  {
+    id: 'visual-workflow',
+    name: 'Visual Workflow SOP',
+    description: 'Diagram-heavy format with flowcharts, swimlane diagrams, and decision trees as primary content.',
+    badge: 'Visual First'
+  },
+  {
     id: 'custom',
     name: 'Custom Structure',
     description: 'Flexible modular format tailored to specific instructions and unique departmental requests.',
     badge: 'Flexible'
   }
 ];
-

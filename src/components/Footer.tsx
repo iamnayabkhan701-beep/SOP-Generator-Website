@@ -68,6 +68,13 @@ export const Footer: React.FC = () => {
           <p className="flex items-center gap-1">
             Built with React, TypeScript, Supabase & Tailwind CSS
           </p>
+          <a
+            href="/admin"
+            className="text-[10px] text-slate-300 hover:text-slate-500 transition-colors ml-4"
+            title="Administrator Access"
+          >
+            Admin
+          </a>
         </div>
       </div>
     </footer>

@@ -21,6 +21,19 @@ import {
   Layers,
   FileSpreadsheet,
   AlertTriangle,
+  Warehouse,
+  GitBranch,
+  Truck,
+  HardHat,
+  ShoppingBag,
+  ChefHat,
+  ShieldCheck,
+  Leaf,
+  TrendingUp,
+  Megaphone,
+  Scale,
+  Laptop,
+  ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -198,6 +211,20 @@ export const SOPWizard: React.FC = () => {
       case 'Headphones': return <Headphones className="w-5 h-5" />;
       case 'Building2': return <Building2 className="w-5 h-5" />;
       case 'Layers': return <Layers className="w-5 h-5" />;
+      case 'Warehouse': return <Warehouse className="w-5 h-5" />;
+      case 'GitBranch': return <GitBranch className="w-5 h-5" />;
+      case 'Truck': return <Truck className="w-5 h-5" />;
+      case 'HardHat': return <HardHat className="w-5 h-5" />;
+      case 'ShoppingBag': return <ShoppingBag className="w-5 h-5" />;
+      case 'ChefHat': return <ChefHat className="w-5 h-5" />;
+      case 'ShieldCheck': return <ShieldCheck className="w-5 h-5" />;
+      case 'Leaf': return <Leaf className="w-5 h-5" />;
+      case 'TrendingUp': return <TrendingUp className="w-5 h-5" />;
+      case 'Megaphone': return <Megaphone className="w-5 h-5" />;
+      case 'Scale': return <Scale className="w-5 h-5" />;
+      case 'Laptop': return <Laptop className="w-5 h-5" />;
+      case 'ClipboardList': return <ClipboardList className="w-5 h-5" />;
+      case 'CheckCircle2': return <CheckCircle2 className="w-5 h-5" />;
       default: return <FileSpreadsheet className="w-5 h-5" />;
     }
   };

@@ -24,12 +24,12 @@ export async function generateSOP(options: GenerateOptions): Promise<SOPGenerate
   const { category, theme, structure, formData, onProgress } = options;
 
   onProgress?.('Validating your organizational details...');
-  await sleep(600);
+  await sleep(400);
 
   onProgress?.(`Structuring document for ${category.toUpperCase()} (${structure})...`);
-  await sleep(700);
+  await sleep(400);
 
-  // First, check if a server-side endpoint is reachable
+  // Check if a server-side endpoint is reachable
   try {
     const res = await fetch('/.netlify/functions/generate-sop', {
       method: 'POST',
@@ -41,31 +41,31 @@ export async function generateSOP(options: GenerateOptions): Promise<SOPGenerate
       const data = await res.json();
       if (data && data.sections) {
         onProgress?.('Verifying generated sections...');
-        await sleep(500);
+        await sleep(300);
         onProgress?.('Finalizing document...');
         return data as SOPGeneratedContent;
       }
     }
   } catch (err) {
-    // If serverless function is not active in current local dev, proceed to smart synthesis
+    // If serverless function is not active in current local dev, proceed to engine
     console.log('Server-side AI endpoint unavailable, using built-in generator engine.');
   }
 
   onProgress?.('Synthesizing professional operational procedures...');
-  await sleep(900);
+  await sleep(500);
 
   onProgress?.('Applying compliance checks and review disclaimers...');
-  await sleep(600);
+  await sleep(300);
 
   // Generate structured, high-standard SOP sections
   const sections = buildStructuredSections(category, structure, formData);
 
   onProgress?.('Finalizing document...');
-  await sleep(400);
+  await sleep(300);
 
   // Build review disclaimer if high-risk or standard
   let disclaimer = 'DRAFT STANDARD OPERATING PROCEDURE. This document is an initial draft generated for operational guidance. It must be formally reviewed and approved by authorized personnel prior to operational implementation.';
-  if (['workplace-safety', 'safety', 'healthcare', 'manufacturing', 'quality'].includes(category)) {
+  if (['workplace-safety', 'safety', 'healthcare', 'manufacturing', 'quality', 'warehouse', 'construction', 'food-service', 'cybersecurity', 'environmental', 'legal'].includes(category)) {
     disclaimer = `CRITICAL REVIEW NOTICE: This SOP pertains to ${category.toUpperCase()}, a regulated or safety-critical operational domain. Under no circumstances should this procedure be deployed without comprehensive review and sign-off by a qualified compliance or domain officer. AI generation does not substitute certified regulatory, legal, or health standards.`;
   }
 
@@ -87,7 +87,7 @@ export async function generateSOP(options: GenerateOptions): Promise<SOPGenerate
       approvedBy: formData.approvedBy || '[Insert Approver Name/Title]',
     },
     executiveSummary: formData.purpose
-      ? `This procedure establishes the formal protocol for ${formData.title.toLowerCase()} across ${formData.department || 'all relevant departments'}. Its primary objective is to maintain consistency, operational efficiency, and risk mitigation.`
+      ? `This procedure establishes the formal protocol for ${formData.title.toLowerCase()} across ${formData.department || 'all relevant departments'}. Its primary objective is to maintain operational consistency, regulatory compliance, defect reduction, and risk mitigation.`
       : `Standard operating protocol for ${formData.title}.`,
     disclaimer,
     flowchart,
@@ -100,6 +100,26 @@ export async function generateSOP(options: GenerateOptions): Promise<SOPGenerate
 }
 
 function buildFlowchartSteps(category: SOPCategory, formData: SOPFormData): FlowchartStep[] {
+  if (category === 'warehouse') {
+    return [
+      { id: 'flow-1', stepNumber: 1, label: 'Inbound Dock Arrival', description: 'Inspect manifest and pallet bill of lading.', role: 'Receiving Clerk', shape: 'start' },
+      { id: 'flow-2', stepNumber: 2, label: 'Barcode Scan & Triage', description: 'Log SKU in WMS and assign storage zone.', role: 'WMS Operator', shape: 'process' },
+      { id: 'flow-3', stepNumber: 3, label: 'Put-Away / Rack Slotting', description: 'Transport to assigned high-bay racking location.', role: 'Forklift Driver', shape: 'process' },
+      { id: 'flow-4', stepNumber: 4, label: 'Cycle Count Verification', description: 'Verify inventory tally against ERP records.', role: 'Inventory Auditor', shape: 'decision' },
+      { id: 'flow-5', stepNumber: 5, label: 'Pick-Pack-Ship Gate', description: 'Release for staging and outbound carrier dispatch.', role: 'Shipping Lead', shape: 'end' },
+    ];
+  }
+
+  if (category === 'manufacturing') {
+    return [
+      { id: 'flow-1', stepNumber: 1, label: 'Machine Pre-Flight', description: 'Calibrate sensors, clean tooling, and verify raw stock.', role: 'Line Operator', shape: 'start' },
+      { id: 'flow-2', stepNumber: 2, label: 'Production Run Initiation', description: 'Engage automated assembly line per recipe parameters.', role: 'Machinist Lead', shape: 'process' },
+      { id: 'flow-3', stepNumber: 3, label: 'In-Process QA Gate', description: 'Tolerance sampling and statistical process check.', role: 'Quality Inspector', shape: 'decision' },
+      { id: 'flow-4', stepNumber: 4, label: 'Defect Quota Audit', description: 'Isolate off-spec units and record batch non-conformance.', role: 'QA Lead', shape: 'process' },
+      { id: 'flow-5', stepNumber: 5, label: 'Final Packaging & Tagging', description: 'Affix lot serials and transfer to finished goods.', role: 'Shift Supervisor', shape: 'end' },
+    ];
+  }
+
   return [
     {
       id: 'flow-1',
@@ -145,6 +165,30 @@ function buildFlowchartSteps(category: SOPCategory, formData: SOPFormData): Flow
 }
 
 function buildMetricsChart(category: SOPCategory, formData: SOPFormData): { title: string; benchmarks: MetricBenchmark[] } {
+  if (category === 'warehouse') {
+    return {
+      title: 'Warehouse & Logistics Performance Benchmarks',
+      benchmarks: [
+        { label: 'Order Picking Accuracy Rate', current: 99.7, target: 99.9, unit: '%', status: 'optimal' },
+        { label: 'Dock-to-Stock Turnaround Time', current: 42, target: 45, unit: 'min', status: 'optimal' },
+        { label: 'Inventory Cycle Count Variance', current: 0.08, target: 0.15, unit: '%', status: 'optimal' },
+        { label: 'On-Time Outbound Dispatch SLA', current: 98.9, target: 99.0, unit: '%', status: 'optimal' },
+      ],
+    };
+  }
+
+  if (category === 'manufacturing') {
+    return {
+      title: 'Manufacturing & Plant Quality Benchmarks',
+      benchmarks: [
+        { label: 'Overall Equipment Effectiveness (OEE)', current: 87.2, target: 85.0, unit: '%', status: 'optimal' },
+        { label: 'First-Pass Yield (FPY)', current: 98.8, target: 99.0, unit: '%', status: 'optimal' },
+        { label: 'Scrap & Defect Rate Allowance', current: 0.04, target: 0.08, unit: '%', status: 'optimal' },
+        { label: 'Mean Time Between Failures (MTBF)', current: 340, target: 300, unit: 'hrs', status: 'optimal' },
+      ],
+    };
+  }
+
   return {
     title: 'Operational KPI & Quality Threshold Benchmarks',
     benchmarks: [
@@ -195,7 +239,7 @@ function buildStructuredSections(
     type: 'text',
     content: formData.purpose
       ? formData.purpose
-      : `The purpose of this Standard Operating Procedure (SOP) is to provide an unambiguous, repeatable, and verified methodology for conducting ${formData.title} within ${formData.companyName || 'the organization'}. Adherence ensures organizational alignment, reduction of human error, and compliance with quality baselines.`,
+      : `The purpose of this Standard Operating Procedure (SOP) is to provide an unambiguous, repeatable, and verified methodology for conducting ${formData.title} within ${formData.companyName || 'the organization'}. Adherence ensures operational alignment, elimination of variance, and rigorous compliance.`,
   });
 
   // 2. Scope
@@ -205,7 +249,7 @@ function buildStructuredSections(
     type: 'text',
     content: formData.scope
       ? formData.scope
-      : `This SOP applies to all personnel, contractors, and departments engaged in ${formData.title.toLowerCase()}. It governs activities performed within the ${formData.department || 'operational'} unit and interfaces with relevant upstream and downstream workflows.`,
+      : `This SOP applies to all designated personnel, contractors, and departments performing ${formData.title.toLowerCase()}. It governs activities executed across ${formData.department || 'the operations'} group and defines interface boundaries with cross-functional units.`,
   });
 
   // 3. Definitions & Acronyms
@@ -213,7 +257,7 @@ function buildStructuredSections(
     id: 'sec-definitions',
     title: '3. Definitions & Terminology',
     type: 'text',
-    content: `• SOP: Standard Operating Procedure\n• SME: Subject Matter Expert\n• QA/QC: Quality Assurance / Quality Control\n• Escalation Point: Designee responsible for resolving deviations from standard execution.\n• [Insert specialized organizational acronyms as applicable]`,
+    content: `• SOP: Standard Operating Procedure\n• SME: Subject Matter Expert\n• QA/QC: Quality Assurance / Quality Control\n• SLA: Service Level Agreement\n• Escalation Point: Authorized individual responsible for approving emergency deviations.`,
   });
 
   // 4. Roles and Responsibilities
@@ -221,7 +265,7 @@ function buildStructuredSections(
     id: 'sec-roles',
     title: '4. Roles & Responsibilities',
     type: 'steps',
-    content: formData.responsibilities || 'Specific duty allocations for the execution and governance of this procedure:',
+    content: formData.responsibilities || 'Specific duty allocations for the governance and execution of this procedure:',
     items: [
       `Primary Operator / Assignee: Responsible for day-to-day execution of procedural steps in accordance with this document.`,
       `Department Supervisor (${formData.department || 'Management'}): Responsible for overseeing adherence, conducting periodic audits, and verifying resource availability.`,
@@ -230,56 +274,94 @@ function buildStructuredSections(
     ],
   });
 
-  // 5. Prerequisites & Tools
+  // 5. Prerequisites, Equipment & Resources
   const prereqItems: string[] = [];
   if (formData.requiredTools) {
     prereqItems.push(`Required Equipment/Tools: ${formData.requiredTools}`);
   } else {
-    prereqItems.push('Workstation with authorized credentials and operational access.');
-    prereqItems.push('Standard personal protective equipment (PPE) or digital tooling per facility protocol.');
+    prereqItems.push('Designated workstation with authenticated system access.');
+    prereqItems.push('Standard personal protective equipment (PPE) or digital toolsets.');
   }
 
   if (catSpec.systemName) prereqItems.push(`Target System/Environment: ${catSpec.systemName}`);
   if (catSpec.accessRequirements) prereqItems.push(`Access & Permissions: ${catSpec.accessRequirements}`);
-  if (catSpec.rawMaterials) prereqItems.push(`Specified Materials: ${catSpec.rawMaterials}`);
-  if (catSpec.equipmentSpecs) prereqItems.push(`Machinery/Hardware: ${catSpec.equipmentSpecs}`);
+  if (catSpec.storageZones) prereqItems.push(`Designated Storage Zones: ${catSpec.storageZones}`);
+  if (catSpec.inventorySystem) prereqItems.push(`WMS / Inventory Database: ${catSpec.inventorySystem}`);
+  if (catSpec.equipmentSpecs) prereqItems.push(`Machinery & Tooling: ${catSpec.equipmentSpecs}`);
+  if (catSpec.rawMaterials) prereqItems.push(`Specified Materials / Bill of Materials: ${catSpec.rawMaterials}`);
 
   sections.push({
     id: 'sec-prerequisites',
     title: '5. Prerequisites, Equipment & Resources',
     type: 'checklist',
-    content: 'Verify all required resources are available and calibrated before initiating this procedure:',
+    content: 'Verify all required resources are available, calibrated, and operational prior to commencing work:',
     items: prereqItems,
   });
 
-  // 6. Step-by-Step Procedure (Adapted based on chosen Structure)
-  if (structure === 'checklist') {
-    const rawDetails = formData.procedureDetails || 'Execute standard milestone checks and verify completion.';
-    const splitSteps = rawDetails
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean);
-
+  // 6. Structure-Specific Core Procedures
+  if (structure === 'raci-matrix') {
     sections.push({
-      id: 'sec-procedure',
-      title: '6. Operational Checklist',
+      id: 'sec-raci',
+      title: '6. RACI Accountability & Governance Matrix',
+      type: 'table',
+      content: 'Clear allocation of responsibility per task (R = Responsible, A = Accountable, C = Consulted, I = Informed):',
+      tableData: {
+        headers: ['Milestone / Procedural Task', 'Operator', 'Supervisor', 'QA Lead', 'Dept Head'],
+        rows: [
+          ['Task 1: Pre-Execution Inspection & Calibration', 'R (Executes)', 'A (Signs off)', 'C (Advises)', 'I (Notified)'],
+          ['Task 2: Core Workflow Operation', 'R (Executes)', 'A (Monitors)', 'I (Informed)', 'I (Informed)'],
+          ['Task 3: Quality Sampling & Tolerance Audit', 'C (Assists)', 'A (Authorizes)', 'R (Performs audit)', 'I (Informed)'],
+          ['Task 4: Non-Conformance Isolation & Rollback', 'R (Isolates)', 'A (Decides action)', 'C (Advises)', 'A (Notified)'],
+          ['Task 5: Final Sign-off, Archival & Handover', 'R (Submits)', 'A (Approves)', 'C (Logs)', 'I (Informed)'],
+        ],
+      },
+    });
+  } else if (structure === 'iso-9001') {
+    sections.push({
+      id: 'sec-iso',
+      title: '6. ISO 9001:2015 Quality Management Protocol',
+      type: 'steps',
+      content: 'Clauses mapped according to ISO 9001:2015 High-Level Structure (HLS):',
+      items: [
+        'Clause 4 (Context of Organization): Determine internal and external factors influencing this operational process.',
+        'Clause 7 (Support & Resource Management): Ensure personnel competency, equipment calibration, and environment control.',
+        'Clause 8 (Operational Planning & Control): Execute defined manufacturing/operational sequence strictly to specifications.',
+        'Clause 9 (Performance Evaluation): Conduct statistical process audits, monitor KPIs, and record quality inspection data.',
+        'Clause 10 (Non-conformity & Corrective Action): Immediately log root cause, apply containment, and prevent recurrence.',
+      ],
+    });
+  } else if (structure === 'lean-six-sigma') {
+    sections.push({
+      id: 'sec-dmaic',
+      title: '6. Lean Six Sigma DMAIC Process Framework',
+      type: 'steps',
+      content: 'Execute process according to the 5 DMAIC optimization gates:',
+      items: [
+        'D - Define: Establish the critical-to-quality (CTQ) specifications, customer requirements, and baseline scope.',
+        'M - Measure: Capture real-time cycle times, defect per million opportunities (DPMO), and process capability.',
+        'A - Analyze: Identify root causes of variation using fishbone analysis, 5-Why methodology, and Pareto charts.',
+        'I - Improve: Implement standard operating adjustments, poka-yoke (mistake-proofing), and optimized sequencing.',
+        'C - Control: Institute statistical process control (SPC) charts, standard work audits, and visual management controls.',
+      ],
+    });
+  } else if (structure === 'quick-reference') {
+    sections.push({
+      id: 'sec-quickref',
+      title: '6. Quick Reference Operational Summary',
       type: 'checklist',
-      content: 'Complete each verification item sequentially. Log any deviation in the discrepancy record.',
-      items:
-        splitSteps.length > 2
-          ? splitSteps
-          : [
-              'Verify initial operating conditions and confirm readiness checklist.',
-              'Initiate core operational sequence as outlined in technical specifications.',
-              'Monitor primary telemetry, parameters, or service benchmarks throughout execution.',
-              'Perform post-execution quality audit and document outputs in system logs.',
-              'Sign off on completion and notify subsequent shift or designated supervisor.',
-            ],
+      content: 'Critical at-a-glance instructions for fast field execution:',
+      items: [
+        'STEP 1: Check power, network, and safety guard locks.',
+        'STEP 2: Load parameters and verify batch serial numbers.',
+        'STEP 3: Run operational sequence — watch pressure/telemetry gauge.',
+        'STEP 4: If warning beacon flashes, trigger STOP and alert supervisor.',
+        'STEP 5: Record completion stamp on batch physical traveler card.',
+      ],
     });
   } else if (structure === 'table') {
     sections.push({
       id: 'sec-procedure',
-      title: '6. Procedural Matrix & Action Table',
+      title: '6. Procedural Action & Verification Matrix',
       type: 'table',
       content: 'Detailed action matrix indicating responsible role and expected verification outcomes for each stage:',
       tableData: {
@@ -313,6 +395,29 @@ function buildStructuredSections(
           ],
         ],
       },
+    });
+  } else if (structure === 'checklist') {
+    const rawDetails = formData.procedureDetails || 'Execute standard milestone checks and verify completion.';
+    const splitSteps = rawDetails
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    sections.push({
+      id: 'sec-procedure',
+      title: '6. Operational Checklist',
+      type: 'checklist',
+      content: 'Complete each verification item sequentially. Log any deviation in the discrepancy record.',
+      items:
+        splitSteps.length > 2
+          ? splitSteps
+          : [
+              'Verify initial operating conditions and confirm readiness checklist.',
+              'Initiate core operational sequence as outlined in technical specifications.',
+              'Monitor primary telemetry, parameters, or service benchmarks throughout execution.',
+              'Perform post-execution quality audit and document outputs in system logs.',
+              'Sign off on completion and notify subsequent shift or designated supervisor.',
+            ],
     });
   } else {
     // Standard or Step-by-step
@@ -359,7 +464,7 @@ function buildStructuredSections(
     id: 'sec-records',
     title: '8. Records, Auditing & Document History',
     type: 'text',
-    content: `All operational records, logs, and verification sign-offs generated pursuant to this procedure must be retained for a minimum of [Insert Retention Period, e.g., 3 years] in accordance with organizational compliance policy. Audits may be performed at random intervals by internal QA or regulatory oversight bodies.`,
+    content: `All operational records, logs, and verification sign-offs generated pursuant to this procedure must be retained for a minimum of 3 years in accordance with organizational compliance policy. Audits may be performed at periodic intervals by internal QA or regulatory oversight bodies.`,
   });
 
   // 9. Sign-off and Authorization
@@ -372,4 +477,3 @@ function buildStructuredSections(
 
   return sections;
 }
-

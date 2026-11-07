@@ -8,15 +8,12 @@ import {
   AlertTriangle,
   RefreshCw,
   ExternalLink,
-  Users,
-  FileText,
   Lock,
   Layers,
-  Sparkles,
   Server,
-  Settings as SettingsIcon,
   Copy,
-  Check,
+  XCircle,
+  ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -26,46 +23,46 @@ import {
   supabase,
 } from '../lib/supabase';
 
+const ADMIN_EMAIL = 'iamnayabkhan701@gmail.com';
+const ADMIN_PASSWORD = 'nayab@2006';
+
 export const AdminPanel: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Admin access control (Passcode or Admin email)
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
-  const [passcode, setPasscode] = useState('');
-  const [passcodeError, setPasscodeError] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
 
-  // Supabase Configuration State
   const [url, setUrl] = useState(SUPABASE_URL || '');
   const [anonKey, setAnonKey] = useState(SUPABASE_ANON_KEY || '');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Diagnostic State
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [stats, setStats] = useState({ totalDocs: 0, totalUsers: 0, totalRevisions: 0 });
-  const [copiedSql, setCopiedSql] = useState(false);
 
   const isConfigured = isSupabaseConfigured();
 
-  // If user is already identified as admin by email
+  // Auto-unlock if the logged-in user is the admin
   useEffect(() => {
-    if (
-      user?.email?.toLowerCase().includes('admin') ||
-      user?.email === 'iamnayabkhan@701gmail.com'
-    ) {
+    if (user?.email === ADMIN_EMAIL) {
       setIsAdminUnlocked(true);
     }
   }, [user]);
 
-  const handleUnlockAdmin = (e: React.FormEvent) => {
+  // If a non-admin user is logged in, block access
+  const isNonAdminLoggedIn = user && user.email !== ADMIN_EMAIL;
+
+  const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passcode === 'admin123' || passcode === 'sop2026' || user?.email) {
+    if (loginEmail.trim() === ADMIN_EMAIL && loginPassword === ADMIN_PASSWORD) {
       setIsAdminUnlocked(true);
-      setPasscodeError('');
+      setLoginError('');
     } else {
-      setPasscodeError('Invalid administrative passcode. Please enter the correct admin code.');
+      setLoginError('Invalid administrator credentials. Access denied.');
     }
   };
 
@@ -95,19 +92,19 @@ export const AdminPanel: React.FC = () => {
     }
 
     try {
-      const { data, error, count } = await supabase
+      const { error, count } = await supabase
         .from('sop_documents')
         .select('*', { count: 'exact', head: true });
 
       if (error) {
         setTestResult({
           success: false,
-          message: `Database check returned an error: ${error.message} (Verify that migration SQL has been executed in Supabase).`,
+          message: `Database check returned an error: ${error.message}`,
         });
       } else {
         setTestResult({
           success: true,
-          message: 'Connection Successful! PostgreSQL database and Row-Level Security (RLS) policies are active and responding.',
+          message: 'Connection Successful! PostgreSQL database and Row-Level Security (RLS) are active.',
         });
         setStats((prev) => ({ ...prev, totalDocs: count || 0 }));
       }
@@ -121,7 +118,33 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
-  // If not unlocked, show Admin Lock screen
+  // --- ACCESS DENIED (non-admin logged-in user) ---
+  if (isNonAdminLoggedIn) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4 bg-slate-50">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-rose-200 shadow-xl space-y-6 text-center">
+          <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-600 mx-auto flex items-center justify-center">
+            <XCircle className="w-7 h-7" />
+          </div>
+          <h2 className="text-2xl font-extrabold text-slate-900">Access Denied</h2>
+          <p className="text-sm text-slate-500 leading-relaxed">
+            This Admin Panel is restricted to authorized administrators only.
+            Your account <strong className="text-slate-700">{user?.email}</strong> does not have
+            administrative privileges.
+          </p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- ADMIN LOGIN SCREEN ---
   if (!isAdminUnlocked) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 bg-slate-50">
@@ -132,27 +155,41 @@ export const AdminPanel: React.FC = () => {
             </div>
             <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Admin Portal</h2>
             <p className="text-xs text-slate-500">
-              Administrative access is restricted. Enter your admin key to access Supabase & system configuration.
+              Administrative access is restricted. Sign in with your admin credentials to access system configuration.
             </p>
           </div>
 
-          {passcodeError && (
+          {loginError && (
             <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
-              <span>{passcodeError}</span>
+              <span>{loginError}</span>
             </div>
           )}
 
-          <form onSubmit={handleUnlockAdmin} className="space-y-4">
+          <form onSubmit={handleAdminLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                Admin Passcode
+                Admin Email
+              </label>
+              <input
+                type="email"
+                placeholder="Enter admin email address"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                Admin Password
               </label>
               <input
                 type="password"
-                placeholder="Enter passcode (default: admin123)"
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
+                placeholder="Enter admin password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm font-mono"
                 required
               />
@@ -167,17 +204,18 @@ export const AdminPanel: React.FC = () => {
           </form>
 
           <p className="text-center text-[11px] text-slate-400">
-            Default initial passcode: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">admin123</code>
+            Only authorized administrators can access this panel.
           </p>
         </div>
       </div>
     );
   }
 
+  // --- FULL ADMIN PANEL ---
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
-        
+
         {/* Header Banner */}
         <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
@@ -191,7 +229,7 @@ export const AdminPanel: React.FC = () => {
               Backend & Supabase Control Panel
             </h1>
             <p className="text-xs text-slate-400">
-              Only administrators can see or configure database credentials and OAuth settings.
+              Signed in as admin: <span className="text-brand-300 font-mono">{ADMIN_EMAIL}</span>
             </p>
           </div>
 
@@ -220,7 +258,7 @@ export const AdminPanel: React.FC = () => {
             </h3>
             <p className="text-xs leading-relaxed opacity-90">
               {isConfigured
-                ? `Active PostgreSQL Database: ${SUPABASE_URL}. Standard users cannot see this configuration or the connection badge.`
+                ? `Active PostgreSQL Database: ${SUPABASE_URL}. Standard users cannot see this configuration.`
                 : 'Configure your Supabase Project URL and Anon Key below. Once saved, all documents and auth will sync to PostgreSQL.'}
             </p>
           </div>
@@ -317,7 +355,11 @@ export const AdminPanel: React.FC = () => {
             <p className="font-semibold text-slate-900">Follow these 3 steps in Google Cloud and Supabase:</p>
             <ol className="list-decimal pl-5 space-y-2">
               <li>
-                <strong>Create OAuth Client in Google Cloud:</strong> Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="text-brand-600 hover:underline inline-flex items-center gap-0.5">Google Cloud Credentials <ExternalLink className="w-3 h-3"/></a> &gt; Click <em>Create Credentials</em> &gt; <em>OAuth client ID</em> &gt; Choose <em>Web application</em>.
+                <strong>Create OAuth Client in Google Cloud:</strong> Open{' '}
+                <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="text-brand-600 hover:underline inline-flex items-center gap-0.5">
+                  Google Cloud Credentials <ExternalLink className="w-3 h-3"/>
+                </a>{' '}
+                &gt; Click <em>Create Credentials</em> &gt; <em>OAuth client ID</em> &gt; Choose <em>Web application</em>.
               </li>
               <li>
                 <strong>Add Redirect URI:</strong> In the <em>Authorized redirect URIs</em> section, paste your Supabase callback URL:
@@ -326,7 +368,11 @@ export const AdminPanel: React.FC = () => {
                 </div>
               </li>
               <li>
-                <strong>Enable in Supabase:</strong> Open your <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="text-brand-600 hover:underline inline-flex items-center gap-0.5">Supabase Dashboard <ExternalLink className="w-3 h-3"/></a> &gt; <strong>Authentication</strong> &gt; <strong>Providers</strong> &gt; Toggle <strong>Google</strong> to <strong>Enabled</strong> and paste your Google Client ID and Secret.
+                <strong>Enable in Supabase:</strong> Open your{' '}
+                <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="text-brand-600 hover:underline inline-flex items-center gap-0.5">
+                  Supabase Dashboard <ExternalLink className="w-3 h-3"/>
+                </a>{' '}
+                &gt; <strong>Authentication</strong> &gt; <strong>Providers</strong> &gt; Toggle <strong>Google</strong> to <strong>Enabled</strong> and paste your Google Client ID and Secret.
               </li>
             </ol>
           </div>
@@ -351,7 +397,13 @@ export const AdminPanel: React.FC = () => {
           </div>
 
           <p className="text-xs text-slate-500 leading-relaxed">
-            The schema migration file is located in <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">supabase/migrations/20261102000000_init_sop_schema.sql</code>. It creates the <code className="text-brand-600 font-bold">profiles</code>, <code className="text-brand-600 font-bold">sop_documents</code>, and <code className="text-brand-600 font-bold">sop_revisions</code> tables with strict Row-Level Security.
+            The schema migration file is located in{' '}
+            <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">
+              supabase/migrations/20261102000000_init_sop_schema.sql
+            </code>
+            . It creates the <code className="text-brand-600 font-bold">profiles</code>,{' '}
+            <code className="text-brand-600 font-bold">sop_documents</code>, and{' '}
+            <code className="text-brand-600 font-bold">sop_revisions</code> tables with strict Row-Level Security.
           </p>
 
           <div className="bg-slate-900 text-slate-200 p-4 rounded-2xl font-mono text-xs flex items-center justify-between">
@@ -372,4 +424,3 @@ export const AdminPanel: React.FC = () => {
     </div>
   );
 };
-

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Download,
@@ -33,7 +33,7 @@ import {
   uploadPDFToSupabase,
 } from '../lib/supabase';
 import type { SOPDocument, SOPGeneratedContent, SOPSection, SOPTheme } from '../types/sop';
-import { generateSOPPdf } from '../lib/pdfGenerator';
+import { generateSOPPdf, generateSOPPdfFromElement } from '../lib/pdfGenerator';
 import { getAutomaticSOPImages } from '../lib/imageFetcher';
 
 export const SOPPreview: React.FC = () => {
@@ -47,6 +47,7 @@ export const SOPPreview: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   // Section Editing State
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
@@ -96,12 +97,24 @@ export const SOPPreview: React.FC = () => {
     setIsExporting(true);
 
     try {
-      const { blob, pageCount, filename } = await generateSOPPdf({
-        content,
-        theme: doc.theme,
-        structure: doc.structure,
-        organizationName: doc.form_data?.companyName,
-      });
+      let blob: Blob;
+      let pageCount: number;
+      let filename: string;
+
+      if (previewRef.current) {
+        ({ blob, pageCount, filename } = await generateSOPPdfFromElement(
+          previewRef.current,
+          content,
+          doc.title
+        ));
+      } else {
+        ({ blob, pageCount, filename } = await generateSOPPdf({
+          content,
+          theme: doc.theme,
+          structure: doc.structure,
+          organizationName: doc.form_data?.companyName,
+        }));
+      }
 
       // 1. Trigger browser download
       const url = URL.createObjectURL(blob);
@@ -306,7 +319,7 @@ export const SOPPreview: React.FC = () => {
         </div>
 
         {/* Paper Document Preview (Simulates Official Printed Document) */}
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-200/90 overflow-hidden font-sans">
+        <div ref={previewRef} className="bg-white rounded-3xl shadow-xl border border-slate-200/90 overflow-hidden font-sans">
           
           {/* Decorative colored top header bar */}
           <div className={`p-6 sm:p-8 ${getThemeHeaderClass(doc.theme)}`}>

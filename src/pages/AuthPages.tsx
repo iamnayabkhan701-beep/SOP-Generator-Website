@@ -14,6 +14,8 @@ export const AuthPages: React.FC<AuthPageProps> = ({ initialMode = 'login' }) =>
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,6 +42,10 @@ export const AuthPages: React.FC<AuthPageProps> = ({ initialMode = 'login' }) =>
       }
       if (password !== confirmPassword) {
         setErrorMsg('Passwords do not match.');
+        return;
+      }
+      if (!acceptTerms) {
+        setErrorMsg('Please accept the Terms of Service and Privacy Policy to create an account.');
         return;
       }
 
@@ -258,6 +264,67 @@ export const AuthPages: React.FC<AuthPageProps> = ({ initialMode = 'login' }) =>
                   required
                 />
               </div>
+
+              {/* Password Strength Indicator */}
+              {password.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-400">Password strength:</span>
+                    <span className={`font-bold ${
+                      password.length >= 10 && /[A-Z]/.test(password) && /[0-9]/.test(password)
+                        ? 'text-emerald-600'
+                        : password.length >= 6
+                        ? 'text-amber-600'
+                        : 'text-rose-500'
+                    }`}>
+                      {password.length >= 10 && /[A-Z]/.test(password) && /[0-9]/.test(password)
+                        ? 'Strong'
+                        : password.length >= 6
+                        ? 'Good'
+                        : 'Too short'}
+                    </span>
+                  </div>
+                  <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        password.length >= 10 && /[A-Z]/.test(password) && /[0-9]/.test(password)
+                          ? 'w-full bg-emerald-500'
+                          : password.length >= 6
+                          ? 'w-2/3 bg-amber-500'
+                          : 'w-1/3 bg-rose-500'
+                      }`}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Terms and Privacy Checkbox */}
+              <div className="mt-3 flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="mt-0.5 rounded text-brand-600 focus:ring-brand-500"
+                />
+                <label htmlFor="terms" className="text-xs text-slate-600 select-none">
+                  I agree to the <span className="text-brand-600 font-semibold underline">Terms of Service</span> and <span className="text-brand-600 font-semibold underline">Privacy Policy</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {mode === 'login' && (
+            <div className="flex items-center justify-between text-xs text-slate-600">
+              <label className="flex items-center gap-2 select-none cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded text-brand-600 focus:ring-brand-500"
+                />
+                <span>Remember me on this device</span>
+              </label>
             </div>
           )}
 
