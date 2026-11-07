@@ -112,7 +112,7 @@ export const AuthPages: React.FC<AuthPageProps> = ({ initialMode = 'login' }) =>
           </h2>
           <p className="text-xs text-slate-500">
             {mode === 'login' && 'Sign in to access and manage your enterprise SOPs'}
-            {mode === 'signup' && 'Get started with AI-generated standard operating procedures'}
+            {mode === 'signup' && 'Get started with enterprise standard operating procedures'}
             {mode === 'forgot' && 'Enter your email to receive password recovery instructions'}
           </p>
         </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FileText, PlusCircle, LogOut, User as UserIcon, Menu, X, Sparkles, FolderKanban, ShieldCheck } from 'lucide-react';
+import { FileText, PlusCircle, LogOut, User as UserIcon, Menu, X, FolderKanban, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Navbar: React.FC = () => {
@@ -25,16 +25,11 @@ export const Navbar: React.FC = () => {
             
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
                 <FileText className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-slate-900 tracking-tight text-lg">SOPify</span>
-                  <span className="bg-brand-50 text-brand-600 border border-brand-200 text-[10px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">
-                    AI
-                  </span>
-                </div>
+                <span className="font-extrabold text-slate-900 tracking-tight text-lg">StandardOps</span>
                 <span className="text-[10px] text-slate-400 font-medium -mt-1 tracking-tight">Enterprise Standard Procedures</span>
               </div>
             </Link>
@@ -62,7 +57,7 @@ export const Navbar: React.FC = () => {
                     }`}
                   >
                     <FolderKanban className="w-4 h-4 text-slate-400" />
-                    My Documents
+                    My SOPs
                   </Link>
                   <Link
                     to="/sop/new"
@@ -74,11 +69,14 @@ export const Navbar: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <a href="/#features" className="px-3.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
-                    Features
+                  <a href="/#templates" className="px-3.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+                    Templates
                   </a>
                   <a href="/#categories" className="px-3.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
                     Departments
+                  </a>
+                  <a href="/#features" className="px-3.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+                    Features
                   </a>
                   <a href="/#how-it-works" className="px-3.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
                     How It Works
@@ -150,7 +148,6 @@ export const Navbar: React.FC = () => {
                     to="/signup"
                     className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 shadow-sm shadow-brand-500/20 transition flex items-center gap-1.5"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
                     <span>Get Started</span>
                   </Link>
                 </div>
@@ -190,7 +187,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
-                  My Documents
+                  My SOPs
                 </Link>
                 <Link
                   to="/sop/new"
@@ -240,4 +237,3 @@ export const Navbar: React.FC = () => {
     </>
   );
 };
-

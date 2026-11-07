@@ -63,3 +63,32 @@
   --accent: #8b5cf6;
 }
 
+/* High-Fidelity Print & PDF Styles */
+@media print {
+  @page {
+    margin: 12mm;
+    size: A4 portrait;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide navigation, sidebars, buttons during print */
+  nav, header, footer, aside, .no-print, button, .lucide-chevron-up, .lucide-chevron-down, .lucide-edit-3, .lucide-trash-2 {
+    display: none !important;
+  }
+
+  .print-break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print-page-break {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+}

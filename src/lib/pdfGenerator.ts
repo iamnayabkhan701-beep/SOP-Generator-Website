@@ -1,7 +1,10 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
-import type { SOPGeneratedContent, SOPTheme, SOPStructure } from '../types/sop';
+import type { SOPGeneratedContent, SOPTheme, SOPStructure, SOPCategory } from '../types/sop';
+import { SOPDocumentView } from '../components/SOPDocumentView';
 
 interface PDFExportOptions {
   content: SOPGeneratedContent;
@@ -142,7 +145,7 @@ export async function generateSOPPdfFromElement(
     doc.addImage(pageImgData, 'JPEG', 0, 0, A4_WIDTH_MM, sliceHeightMM);
   }
 
-  const safeTitle = (filename || content.documentTitle || 'SOP_Document')
+  const safeTitle = (filename || content.documentTitle || 'StandardOps_Document')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .slice(0, 40);
@@ -158,10 +161,64 @@ export async function generateSOPPdfFromElement(
 }
 
 // ==============================================================
-// DIRECT JSPDF FALLBACK (used when DOM is not rendered)
+// OFFSCREEN VISUAL PDF EXPORT: Used by Dashboard & automated downloads
+// Renders the exact SOPDocumentView component off-screen and exports PDF
+// ==============================================================
+export async function generateVisualSOPPdfFromData(
+  content: SOPGeneratedContent,
+  theme: SOPTheme,
+  structure: SOPStructure,
+  category: SOPCategory = 'operations',
+  filename?: string
+): Promise<{ blob: Blob; pageCount: number; filename: string }> {
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.width = '850px';
+  container.style.backgroundColor = '#ffffff';
+  container.style.zIndex = '-9999';
+  document.body.appendChild(container);
+
+  const root = createRoot(container);
+
+  await new Promise<void>((resolve) => {
+    root.render(
+      React.createElement(SOPDocumentView, {
+        content,
+        theme,
+        structure,
+        category,
+        editable: false,
+      })
+    );
+    // Allow layout, styles, and images to settle
+    setTimeout(resolve, 450);
+  });
+
+  try {
+    const result = await generateSOPPdfFromElement(container, content, filename);
+    return result;
+  } finally {
+    root.unmount();
+    if (container.parentElement) {
+      container.parentElement.removeChild(container);
+    }
+  }
+}
+
+// ==============================================================
+// NATIVE BROWSER VECTOR PRINT / PDF EXPORT
+// ==============================================================
+export function printDocumentViaBrowser(): void {
+  window.print();
+}
+
+// ==============================================================
+// DIRECT JSPDF FALLBACK (pure programmatic fallback)
 // ==============================================================
 export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob: Blob; pageCount: number; filename: string }> {
-  const { content, theme, structure, organizationName } = options;
+  const { content, theme, organizationName } = options;
   const palette = THEME_PALETTES[theme] || THEME_PALETTES['professional-blue'];
 
   const doc = new jsPDF({
@@ -179,7 +236,7 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
   const checkPageBreak = (neededHeight: number) => {
     if (cursorY + neededHeight > pageHeight - 20) {
       doc.addPage();
-      cursorY = 22; // leave room for running header
+      cursorY = 22;
     }
   };
 
@@ -255,7 +312,6 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
   // @ts-expect-error - jspdf-autotable adds lastAutoTable to doc
   cursorY = (doc.lastAutoTable?.finalY || cursorY) + 6;
 
-  // --- Review / Compliance Disclaimer ---
   if (content.disclaimer) {
     checkPageBreak(20);
     doc.setFillColor(254, 242, 242);
@@ -276,7 +332,6 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
     cursorY += 18;
   }
 
-  // --- Executive Summary ---
   if (content.executiveSummary) {
     checkPageBreak(18);
     doc.setFont('helvetica', 'bold');
@@ -293,89 +348,6 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
     cursorY += summaryLines.length * 4.5 + 6;
   }
 
-  // --- Visual Process Flowchart Shapes ---
-  checkPageBreak(32);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
-  doc.setTextColor(...palette.primaryDark);
-  doc.text('Visual Process Flowchart & Sequential Milestones', marginX, cursorY);
-  cursorY += 5;
-
-  const flowNodes = [
-    { num: '1', title: 'Initiation', shape: 'capsule' },
-    { num: '2', title: 'Execution', shape: 'rect' },
-    { num: '3', title: 'Verify Gate', shape: 'diamond' },
-    { num: '4', title: 'Resolution', shape: 'rect' },
-    { num: '5', title: 'Approval', shape: 'capsule' },
-  ];
-
-  const nodeWidth = (contentWidth - 16) / 5;
-  const nodeHeight = 12;
-
-  flowNodes.forEach((node, nIdx) => {
-    const nodeX = marginX + nIdx * (nodeWidth + 4);
-
-    doc.setFillColor(...palette.primaryLight);
-    doc.setDrawColor(...palette.primary);
-    doc.setLineWidth(0.3);
-
-    if (node.shape === 'capsule') {
-      doc.roundedRect(nodeX, cursorY, nodeWidth, nodeHeight, 3, 3, 'FD');
-    } else {
-      doc.roundedRect(nodeX, cursorY, nodeWidth, nodeHeight, 1.5, 1.5, 'FD');
-    }
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...palette.primaryDark);
-    doc.text(`Stage ${node.num}`, nodeX + nodeWidth / 2, cursorY + 4.5, { align: 'center' });
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.setTextColor(...palette.text);
-    doc.text(node.title, nodeX + nodeWidth / 2, cursorY + 9, { align: 'center' });
-
-    if (nIdx < 4) {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(...palette.primary);
-      doc.text('>', nodeX + nodeWidth + 1.2, cursorY + 7);
-    }
-  });
-
-  cursorY += nodeHeight + 7;
-
-  // --- Visual Quality & KPI Benchmarks Table ---
-  checkPageBreak(30);
-  autoTable(doc, {
-    startY: cursorY,
-    margin: { left: marginX, right: marginX },
-    head: [['Operational KPI / Metric', 'Current Benchmark', 'Target SLA', 'Compliance Status']],
-    body: [
-      ['First-Pass Yield / Success Rate', '98.4%', '99.0%', 'Optimal / Pass'],
-      ['Standard Procedure Adherence', '100%', '100%', 'Fully Compliant'],
-      ['Incident SLA Resolution Time', '12.5 min', '15.0 min', 'Within Limit'],
-      ['Defect / Error Rate Tolerance', '0.04%', '0.10%', 'Compliant (Zero Defect Zone)'],
-    ],
-    theme: 'grid',
-    styles: {
-      fontSize: 7.5,
-      cellPadding: 2,
-      textColor: palette.text,
-      lineColor: palette.border,
-      lineWidth: 0.15,
-    },
-    headStyles: {
-      fillColor: palette.primaryDark,
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-    },
-  });
-
-  // @ts-expect-error - autoTable adds lastAutoTable
-  cursorY = (doc.lastAutoTable?.finalY || cursorY) + 7;
-
-  // --- Sections Rendering ---
   content.sections.forEach((sec) => {
     checkPageBreak(18);
 
@@ -429,100 +401,20 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
       cursorY += 2;
     }
 
-    if (sec.tableData && sec.tableData.headers && sec.tableData.rows) {
-      checkPageBreak(25);
-      autoTable(doc, {
-        startY: cursorY,
-        margin: { left: marginX, right: marginX },
-        head: [sec.tableData.headers],
-        body: sec.tableData.rows,
-        theme: 'striped',
-        styles: {
-          fontSize: 8,
-          cellPadding: 2.2,
-          textColor: palette.text,
-        },
-        headStyles: {
-          fillColor: palette.primary,
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-        },
-        alternateRowStyles: {
-          fillColor: palette.primaryLight,
-        },
-      });
-
-      // @ts-expect-error - autoTable adds lastAutoTable
-      cursorY = (doc.lastAutoTable?.finalY || cursorY) + 5;
-    }
-
     cursorY += 4;
   });
 
-  // --- Formal Sign-Off Approval Block ---
-  checkPageBreak(38);
-  cursorY += 2;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(...palette.primary);
-  doc.text('FORMAL VERIFICATION & AUTHORIZATION SIGN-OFF', marginX, cursorY);
-  cursorY += 4;
-
-  autoTable(doc, {
-    startY: cursorY,
-    margin: { left: marginX, right: marginX },
-    theme: 'grid',
-    styles: {
-      fontSize: 8,
-      cellPadding: 4,
-      textColor: palette.text,
-      lineColor: palette.border,
-      lineWidth: 0.2,
-    },
-    head: [['Role', 'Name & Title', 'Signature', 'Date']],
-    body: [
-      ['Author / Prepared By', meta.preparedBy, '', meta.effectiveDate],
-      ['Peer / Technical Reviewer', meta.reviewedBy, '', ''],
-      ['Authorized Approver', meta.approvedBy, '', ''],
-    ],
-    headStyles: {
-      fillColor: palette.primaryDark,
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-    },
-  });
-
-  // --- Page Numbering and Running Headers/Footers ---
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
-
-    if (i > 1) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.5);
-      doc.setTextColor(...palette.mutedText);
-      doc.text(
-        `${content.documentTitle || 'Standard Operating Procedure'} | ${meta.sopId}`,
-        marginX,
-        10
-      );
-      doc.setDrawColor(...palette.border);
-      doc.setLineWidth(0.15);
-      doc.line(marginX, 12, marginX + contentWidth, 12);
-    }
-
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(...palette.mutedText);
-    doc.setDrawColor(...palette.border);
-    doc.setLineWidth(0.15);
-    doc.line(marginX, pageHeight - 12, marginX + contentWidth, pageHeight - 12);
-
     doc.text('CONFIDENTIAL & PROPRIETARY — SUBJECT TO FORMAL APPROVAL', marginX, pageHeight - 7.5);
     doc.text(`Page ${i} of ${totalPages}`, pageWidth - marginX - 16, pageHeight - 7.5);
   }
 
-  const safeTitle = (content.documentTitle || 'SOP_Document')
+  const safeTitle = (content.documentTitle || 'StandardOps_Document')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .slice(0, 30);

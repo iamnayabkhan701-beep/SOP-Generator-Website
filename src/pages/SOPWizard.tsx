@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   FileText,
-  Sparkles,
+  FileCheck,
   ArrowRight,
   ArrowLeft,
   Check,
@@ -36,6 +36,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { TemplateGallery } from '../components/TemplateGallery';
 import {
   CATEGORIES,
   THEMES,
@@ -52,6 +53,7 @@ import { generateSOP } from '../lib/aiGenerator';
 
 export const SOPWizard: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -65,6 +67,14 @@ export const SOPWizard: React.FC = () => {
   const [targetPageLength, setTargetPageLength] = useState<TargetPageLength>('standard');
   const [customPageCount, setCustomPageCount] = useState<number>(4);
   const [additionalInstructions, setAdditionalInstructions] = useState<string>('');
+
+  // Handle URL query parameter ?structure=
+  useEffect(() => {
+    const structParam = searchParams.get('structure') as SOPStructure;
+    if (structParam && STRUCTURES.some((s) => s.id === structParam)) {
+      setSelectedStructure(structParam);
+    }
+  }, [searchParams]);
 
   // Form Fields
   const [formData, setFormData] = useState<SOPFormData>({
@@ -402,39 +412,19 @@ export const SOPWizard: React.FC = () => {
               </div>
             </div>
 
-            {/* Structures */}
-            <div className="space-y-3 border-t border-slate-100 pt-6">
+            {/* Structures & Visual Templates */}
+            <div className="space-y-4 border-t border-slate-100 pt-6">
               <div className="flex items-center gap-2">
                 <LayoutTemplate className="w-4 h-4 text-brand-600" />
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                  Select Document Organization & Structure
+                  Select SOP Template Format & Layout
                 </h3>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {STRUCTURES.map((st) => {
-                  const isSelected = selectedStructure === st.id;
-                  return (
-                    <button
-                      key={st.id}
-                      type="button"
-                      onClick={() => setSelectedStructure(st.id)}
-                      className={`p-4 rounded-2xl border text-left transition-all ${
-                        isSelected
-                          ? 'border-brand-600 bg-brand-50/40 ring-2 ring-brand-500/20 shadow-sm'
-                          : 'border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-sm font-bold text-slate-900">{st.name}</span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                          {st.badge}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 leading-relaxed">{st.description}</p>
-                    </button>
-                  );
-                })}
-              </div>
+              <TemplateGallery
+                selectedStructure={selectedStructure}
+                onSelectStructure={setSelectedStructure}
+                showSelectOnly={true}
+              />
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-slate-100">
@@ -467,7 +457,7 @@ export const SOPWizard: React.FC = () => {
                 SOP Details & Organizational Information
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Provide accurate details. The AI generator will preserve all provided roles, tools, and constraints.
+                Provide accurate details. The procedural generation engine will preserve all provided roles, tools, and constraints.
               </p>
             </div>
 
@@ -578,7 +568,7 @@ export const SOPWizard: React.FC = () => {
                   rows={4}
                   value={formData.procedureDetails}
                   onChange={(e) => setFormData({ ...formData, procedureDetails: e.target.value })}
-                  placeholder="Outline the core steps or bullet points. The AI will expand, format, and number them properly."
+                  placeholder="Outline the core steps or bullet points. The system will expand, structure, and number them properly."
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-mono text-xs"
                 />
               </div>
@@ -873,8 +863,8 @@ export const SOPWizard: React.FC = () => {
                 disabled={isGenerating}
                 className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-sm shadow-xl shadow-brand-500/25 transition flex items-center gap-2 group disabled:opacity-50"
               >
-                <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                <span>Generate My SOP</span>
+                <FileCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <span>Synthesize SOP Document</span>
               </button>
             </div>
           </div>
@@ -882,14 +872,14 @@ export const SOPWizard: React.FC = () => {
 
       </div>
 
-      {/* Honest Generation Progress Modal */}
+      {/* Generation Progress Modal */}
       {isGenerating && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
             <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full border-4 border-brand-100 animate-ping opacity-30" />
               <div className="w-16 h-16 rounded-2xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center shadow-lg">
-                <Sparkles className="w-8 h-8 animate-spin" style={{ animationDuration: '3s' }} />
+                <FileCheck className="w-8 h-8 animate-pulse text-brand-600" />
               </div>
             </div>
 

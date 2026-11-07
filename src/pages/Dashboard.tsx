@@ -10,9 +10,6 @@ import {
   Archive,
   Trash2,
   ExternalLink,
-  Filter,
-  CheckCircle2,
-  AlertCircle,
   FileCheck,
   FolderOpen,
   Sparkles,
@@ -24,9 +21,7 @@ import {
   Settings as SettingsIcon,
   LogOut,
   ArrowRight,
-  TrendingUp,
   ChevronRight,
-  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -36,8 +31,9 @@ import {
   updateSOPDocument,
 } from '../lib/supabase';
 import type { SOPDocument, SOPStatus, SOPCategory } from '../types/sop';
-import { CATEGORIES, STRUCTURES } from '../types/sop';
-import { generateSOPPdf } from '../lib/pdfGenerator';
+import { CATEGORIES } from '../types/sop';
+import { generateVisualSOPPdfFromData } from '../lib/pdfGenerator';
+import { TemplateGallery } from '../components/TemplateGallery';
 
 type DashboardTab = 'dashboard' | 'my-sops' | 'templates';
 
@@ -97,20 +93,22 @@ export const Dashboard: React.FC = () => {
     setActionLoadingId(null);
   };
 
+  // High-fidelity visual PDF export from Dashboard
   const handleQuickDownloadPDF = async (doc: SOPDocument) => {
     if (!doc.generated_content) {
-      alert('This draft does not have generated content yet. Open it in editor to generate.');
+      alert('This draft does not have content yet. Open it in editor to generate.');
       return;
     }
     setActionLoadingId(doc.id);
     try {
       const activeContent = doc.edited_content || doc.generated_content;
-      const { blob, filename } = await generateSOPPdf({
-        content: activeContent,
-        theme: doc.theme,
-        structure: doc.structure,
-        organizationName: doc.form_data?.companyName,
-      });
+      const { blob, filename } = await generateVisualSOPPdfFromData(
+        activeContent,
+        doc.theme,
+        doc.structure,
+        doc.category,
+        doc.title
+      );
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -120,8 +118,8 @@ export const Dashboard: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error('PDF quick export error', e);
+    } catch (e: any) {
+      console.error('PDF export error', e);
       alert('Failed to generate PDF. Open preview to view details.');
     } finally {
       setActionLoadingId(null);
@@ -161,16 +159,16 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar Navigation */}
-      <aside className="w-64 bg-slate-900 text-white shrink-0 hidden md:flex flex-col justify-between py-6 px-4">
+      <aside className="w-64 bg-slate-900 text-white shrink-0 hidden md:flex flex-col justify-between py-6 px-4 no-print">
         <div className="space-y-6">
           {/* Logo / Brand */}
           <div className="px-3 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center font-bold text-white shadow-md">
+            <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center font-bold text-white shadow-md">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-extrabold tracking-tight text-white">SOPify AI</h2>
-              <span className="text-[10px] text-slate-400 font-mono">Enterprise SaaS</span>
+              <h2 className="text-sm font-extrabold tracking-tight text-white">StandardOps</h2>
+              <span className="text-[10px] text-slate-400 font-mono">Enterprise Platform</span>
             </div>
           </div>
 
@@ -180,7 +178,7 @@ export const Dashboard: React.FC = () => {
               onClick={() => setActiveTab('dashboard')}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${
                 activeTab === 'dashboard'
-                  ? 'bg-brand-600 text-white shadow-sm'
+                  ? 'bg-brand-600 text-white shadow-xs'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
@@ -200,7 +198,7 @@ export const Dashboard: React.FC = () => {
               onClick={() => setActiveTab('my-sops')}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${
                 activeTab === 'my-sops'
-                  ? 'bg-brand-600 text-white shadow-sm'
+                  ? 'bg-brand-600 text-white shadow-xs'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
@@ -217,7 +215,7 @@ export const Dashboard: React.FC = () => {
               onClick={() => setActiveTab('templates')}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition ${
                 activeTab === 'templates'
-                  ? 'bg-brand-600 text-white shadow-sm'
+                  ? 'bg-brand-600 text-white shadow-xs'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
@@ -290,7 +288,7 @@ export const Dashboard: React.FC = () => {
           {activeTab === 'dashboard' && (
             <>
               {/* Welcome Banner */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -301,13 +299,13 @@ export const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-sm text-slate-500 mt-1">
-                    AI-powered Standard Operating Procedure generation, visual editing, and compliant PDF publishing.
+                    Automated Standard Operating Procedure platform, visual document review, and high-fidelity PDF publishing.
                   </p>
                 </div>
 
                 <Link
                   to="/sop/new"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-lg shadow-brand-500/25 transition shrink-0"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-md shadow-brand-500/20 transition shrink-0"
                 >
                   <PlusCircle className="w-5 h-5" />
                   <span>Create New SOP</span>
@@ -316,7 +314,7 @@ export const Dashboard: React.FC = () => {
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total SOPs</span>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-3xl font-extrabold text-slate-900">{totalCount}</span>
@@ -326,7 +324,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Approved & Ready</span>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-3xl font-extrabold text-emerald-600">{readyCount}</span>
@@ -336,7 +334,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Drafts in Progress</span>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-3xl font-extrabold text-amber-600">{draftCount}</span>
@@ -346,7 +344,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Archived</span>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-3xl font-extrabold text-slate-500">{archivedCount}</span>
@@ -361,7 +359,6 @@ export const Dashboard: React.FC = () => {
               {totalCount === 0 && (
                 <div className="bg-gradient-to-r from-brand-900 to-slate-900 text-white p-8 rounded-3xl shadow-lg space-y-4">
                   <div className="inline-flex items-center gap-2 bg-brand-500/20 text-brand-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-brand-400/30">
-                    <Sparkles className="w-3.5 h-3.5" />
                     Getting Started Guide
                   </div>
                   <h3 className="text-xl font-extrabold">Generate Your First Enterprise SOP in 3 Simple Steps</h3>
@@ -394,7 +391,7 @@ export const Dashboard: React.FC = () => {
               {/* Two Column Section: Recently Created & Recently Updated */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recently Created */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                       <PlusCircle className="w-4 h-4 text-brand-600" />
@@ -434,7 +431,7 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Recently Updated */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-indigo-600" />
@@ -500,7 +497,7 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Filter and Search Bar */}
-              <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center gap-3">
+              <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center gap-3">
                 <div className="relative flex-1 w-full">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <input
@@ -569,7 +566,7 @@ export const Dashboard: React.FC = () => {
                   {filtered.map((d) => (
                     <div
                       key={d.id}
-                      className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all p-6 flex flex-col justify-between space-y-4 group"
+                      className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all p-6 flex flex-col justify-between space-y-4 group"
                     >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-xs">
@@ -620,7 +617,7 @@ export const Dashboard: React.FC = () => {
                             className="py-2 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold text-center transition flex items-center justify-center gap-1.5"
                           >
                             <Download className="w-3.5 h-3.5" />
-                            <span>PDF</span>
+                            <span>{actionLoadingId === d.id ? 'Rendering...' : 'PDF'}</span>
                           </button>
                         </div>
 
@@ -655,46 +652,10 @@ export const Dashboard: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 3: TEMPLATES GALLERY */}
+          {/* TAB 3: TEMPLATES GALLERY (11 VISUAL PREVIEWS) */}
           {activeTab === 'templates' && (
             <div className="space-y-6">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-brand-600">Verified Layout Formats</span>
-                <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-                  Enterprise SOP Template Library
-                </h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  11 specialized structural formats designed for ISO standards, RACI matrices, Lean/Six Sigma, and rapid operational execution.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {STRUCTURES.map((st) => (
-                  <div
-                    key={st.id}
-                    className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 flex flex-col justify-between space-y-4 hover:border-brand-500/50 hover:shadow-md transition group"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-700 px-2.5 py-0.5 rounded-full border border-brand-200">
-                          {st.badge}
-                        </span>
-                        <LayoutTemplate className="w-4 h-4 text-slate-400 group-hover:text-brand-600 transition" />
-                      </div>
-                      <h3 className="font-extrabold text-slate-900 text-base">{st.name}</h3>
-                      <p className="text-xs text-slate-500 leading-relaxed">{st.description}</p>
-                    </div>
-
-                    <Link
-                      to="/sop/new"
-                      className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-sm"
-                    >
-                      <span>Use This Format</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                ))}
-              </div>
+              <TemplateGallery />
             </div>
           )}
 
