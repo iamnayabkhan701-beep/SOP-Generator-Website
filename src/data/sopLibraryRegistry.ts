@@ -1,6 +1,6 @@
 import type { SOPCategory } from '../types/sop';
 import type { DepartmentTopic } from './departmentTemplates';
-import { DEPARTMENT_TOPICS } from './departmentTemplates';
+import { INITIAL_DEPARTMENT_TOPICS } from './initialDepartmentTopics';
 import { ALL_REMAINING_TOPICS } from './allDepartmentTopics';
 import { EXTENDED_DEPARTMENT_TOPICS } from './departmentTopicsExtended';
 import { FINAL_DEPARTMENT_TOPICS } from './departmentTopicsFinal';
@@ -18,7 +18,7 @@ export const MASTER_SOP_LIBRARY: DepartmentTopic[] = [
   ...BUSINESS_AND_MANAGEMENT_SOPS,
   ...OPERATIONS_AND_MANUFACTURING_SOPS,
   ...TECHNOLOGY_AND_SPECIALIZED_SOPS,
-  ...DEPARTMENT_TOPICS,
+  ...INITIAL_DEPARTMENT_TOPICS,
   ...ALL_REMAINING_TOPICS,
   ...EXTENDED_DEPARTMENT_TOPICS,
   ...FINAL_DEPARTMENT_TOPICS,
