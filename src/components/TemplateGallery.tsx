@@ -540,3 +540,4 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({
     </div>
   );
 };
+

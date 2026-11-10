@@ -29,8 +29,8 @@ export const Navbar: React.FC = () => {
                 <FileText className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="font-extrabold text-slate-900 tracking-tight text-lg">StandardOps</span>
-                <span className="text-[10px] text-slate-400 font-medium -mt-1 tracking-tight">Enterprise Standard Procedures</span>
+                <span className="font-extrabold text-slate-900 tracking-tight text-lg">SOPFlow</span>
+                <span className="text-[10px] text-slate-400 font-medium -mt-1 tracking-tight">Professional SOP Platform</span>
               </div>
             </Link>
 

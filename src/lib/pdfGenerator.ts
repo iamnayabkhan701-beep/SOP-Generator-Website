@@ -145,7 +145,7 @@ export async function generateSOPPdfFromElement(
     doc.addImage(pageImgData, 'JPEG', 0, 0, A4_WIDTH_MM, sliceHeightMM);
   }
 
-  const safeTitle = (filename || content.documentTitle || 'StandardOps_Document')
+  const safeTitle = (filename || content.documentTitle || 'SOPFlow_Document')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .slice(0, 40);
@@ -414,7 +414,7 @@ export async function generateSOPPdf(options: PDFExportOptions): Promise<{ blob:
     doc.text(`Page ${i} of ${totalPages}`, pageWidth - marginX - 16, pageHeight - 7.5);
   }
 
-  const safeTitle = (content.documentTitle || 'StandardOps_Document')
+  const safeTitle = (content.documentTitle || 'SOPFlow_Document')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .slice(0, 30);

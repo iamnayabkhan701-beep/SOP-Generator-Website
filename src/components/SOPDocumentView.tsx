@@ -1,19 +1,11 @@
 import React from 'react';
 import {
-  GitBranch,
-  ArrowRight,
-  Image as ImageIcon,
-  BarChart3,
-  CheckCircle2,
   AlertTriangle,
   ChevronUp,
   ChevronDown,
   Edit3,
   Trash2,
   Check,
-  ShieldCheck,
-  Layers,
-  FileCheck,
 } from 'lucide-react';
 import type {
   SOPGeneratedContent,
@@ -22,7 +14,6 @@ import type {
   SOPCategory,
   SOPSection,
 } from '../types/sop';
-import { getAutomaticSOPImages } from '../lib/imageFetcher';
 
 interface SOPDocumentViewProps {
   content: SOPGeneratedContent;
@@ -41,26 +32,14 @@ interface SOPDocumentViewProps {
   onTempContentChange?: (val: string) => void;
 }
 
-export const getThemeHeaderClass = (theme: SOPTheme) => {
-  switch (theme) {
-    case 'corporate-black':
-      return 'bg-slate-900 text-white';
-    case 'modern-green':
-      return 'bg-emerald-700 text-white';
-    case 'minimal-white':
-      return 'bg-slate-800 text-white';
-    case 'creative-purple':
-      return 'bg-purple-700 text-white';
-    default:
-      return 'bg-brand-600 text-white';
-  }
-};
+// Kept for compatibility — always returns B&W
+export const getThemeHeaderClass = (_theme: SOPTheme) => 'bg-white text-black';
 
 export const SOPDocumentView: React.FC<SOPDocumentViewProps> = ({
   content,
-  theme,
-  structure,
-  category = 'operations',
+  theme: _theme,
+  structure: _structure,
+  category: _category = 'operations',
   editable = false,
   editingSectionId = null,
   tempTitle = '',
@@ -72,444 +51,238 @@ export const SOPDocumentView: React.FC<SOPDocumentViewProps> = ({
   onTempTitleChange,
   onTempContentChange,
 }) => {
-  const displayImages =
-    content.images && content.images.length > 0
-      ? content.images
-      : getAutomaticSOPImages(category, content.documentTitle);
+  const meta = content.metadata || {
+    sopId: 'SOP-001',
+    version: '1.0',
+    effectiveDate: new Date().toISOString().split('T')[0],
+    department: 'Operations',
+    preparedBy: 'Author',
+    reviewedBy: 'Reviewer',
+    approvedBy: 'Approver',
+  };
+
+  const s = {
+    page: { fontFamily: 'Arial, Calibri, "Helvetica Neue", sans-serif', color: '#000', backgroundColor: '#fff', fontSize: '11pt', lineHeight: '1.55' } as React.CSSProperties,
+    headerBar: { borderBottom: '2.5px solid #000', padding: '24px 36px 18px 36px', backgroundColor: '#fff' } as React.CSSProperties,
+    metaCell: { border: '1px solid #000', padding: '5px 8px', fontSize: '9pt', color: '#000' } as React.CSSProperties,
+    metaLabel: { border: '1px solid #000', padding: '5px 8px', fontWeight: 700, backgroundColor: '#f0f0f0', fontSize: '9pt', color: '#000' } as React.CSSProperties,
+    sectionTitle: { fontSize: '12pt', fontWeight: 700, color: '#000', margin: 0, textTransform: 'uppercase' as const, letterSpacing: '0.03em' } as React.CSSProperties,
+    sectionBar: { borderBottom: '1px solid #000', marginBottom: '8px', paddingBottom: '3px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties,
+    bodyText: { fontSize: '10pt', color: '#000', lineHeight: '1.6', whiteSpace: 'pre-wrap' as const } as React.CSSProperties,
+    tableHeader: { border: '1px solid #000', padding: '6px 8px', fontWeight: 700, backgroundColor: '#f0f0f0', textAlign: 'left' as const, color: '#000', fontSize: '9pt' } as React.CSSProperties,
+    tableCell: { border: '1px solid #000', padding: '5px 8px', color: '#000', fontSize: '9pt' } as React.CSSProperties,
+  };
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-slate-200/90 overflow-hidden font-sans print:shadow-none print:border-none print:rounded-none">
-      
-      {/* ============================================================== */}
-      {/* 1. DOCUMENT TOP HEADER & METADATA BAR                         */}
-      {/* ============================================================== */}
-      <div className={`p-6 sm:p-8 ${getThemeHeaderClass(theme)} print:p-6 print-break-inside-avoid`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/20 pb-4">
-          <div>
-            <span className="text-[11px] font-bold tracking-widest uppercase opacity-85">
-              {content.organization || 'ENTERPRISE STANDARD OPERATING PROCEDURE'}
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1 text-white">
+    <div className="bg-white font-sans text-black print:shadow-none print:border-none print:rounded-none" style={s.page}>
+
+      {/* === DOCUMENT HEADER === */}
+      <div style={s.headerBar} className="print-break-inside-avoid">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '9pt', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#000', marginBottom: '4px' }}>
+              {content.organization || 'ORGANIZATION'}
+            </div>
+            <h1 style={{ fontSize: '20pt', fontWeight: 700, color: '#000', margin: '0 0 4px 0', lineHeight: '1.2' }}>
               {content.documentTitle}
             </h1>
+            <div style={{ fontSize: '9pt', color: '#333', fontWeight: 400 }}>Standard Operating Procedure</div>
           </div>
-          <div className="text-right text-xs opacity-90 font-mono">
-            <p><strong>ID:</strong> {content.metadata?.sopId || 'SOP-001'}</p>
-            <p><strong>Version:</strong> v{content.metadata?.version || '1.0'}</p>
-          </div>
-        </div>
-
-        {/* Metadata Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs">
-          <div>
-            <span className="opacity-70 block text-[10px] uppercase">Effective Date</span>
-            <span className="font-semibold">{content.metadata?.effectiveDate || 'Immediate'}</span>
-          </div>
-          <div>
-            <span className="opacity-70 block text-[10px] uppercase">Department</span>
-            <span className="font-semibold">{content.metadata?.department || 'Operations'}</span>
-          </div>
-          <div>
-            <span className="opacity-70 block text-[10px] uppercase">Prepared By</span>
-            <span className="font-semibold">{content.metadata?.preparedBy}</span>
-          </div>
-          <div>
-            <span className="opacity-70 block text-[10px] uppercase">Approved By</span>
-            <span className="font-semibold">{content.metadata?.approvedBy}</span>
+          <div style={{ textAlign: 'right', fontSize: '9pt', color: '#000', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+            <div><strong>Doc ID:</strong> {meta.sopId || 'SOP-001'}</div>
+            <div><strong>Version:</strong> v{meta.version || '1.0'}</div>
+            <div><strong>Effective:</strong> {meta.effectiveDate}</div>
           </div>
         </div>
       </div>
 
-      <div className="p-6 sm:p-10 space-y-8 print:p-6 print:space-y-6">
-        
-        {/* ============================================================== */}
-        {/* 2. REGULATORY & OPERATIONAL NOTICE                             */}
-        {/* ============================================================== */}
-        {content.disclaimer && (
-          <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs flex items-start gap-3 print-break-inside-avoid">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+      {/* === METADATA TABLE === */}
+      <div style={{ padding: '0 36px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 0 }}>
+          <tbody>
+            <tr>
+              <td style={s.metaLabel}>Department</td>
+              <td style={{ ...s.metaCell, width: '30%' }}>{meta.department}</td>
+              <td style={s.metaLabel}>Prepared By</td>
+              <td style={{ ...s.metaCell, width: '30%' }}>{meta.preparedBy}</td>
+            </tr>
+            <tr>
+              <td style={s.metaLabel}>Reviewed By</td>
+              <td style={s.metaCell}>{meta.reviewedBy}</td>
+              <td style={s.metaLabel}>Approved By</td>
+              <td style={s.metaCell}>{meta.approvedBy}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* === DISCLAIMER === */}
+      {content.disclaimer && (
+        <div style={{ margin: '14px 36px', padding: '10px 14px', border: '1px solid #000', backgroundColor: '#fafafa' }} className="print-break-inside-avoid">
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            <AlertTriangle style={{ width: 14, height: 14, flexShrink: 0, marginTop: 1, color: '#000' }} />
             <div>
-              <span className="font-bold block text-sm mb-0.5 text-amber-950">Formal Review & Compliance Notice</span>
-              <p className="leading-relaxed opacity-95">{content.disclaimer}</p>
+              <div style={{ fontWeight: 700, fontSize: '9pt', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Review & Compliance Notice</div>
+              <div style={{ fontSize: '8.5pt', color: '#333', lineHeight: '1.4' }}>{content.disclaimer}</div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ============================================================== */}
-        {/* 3. EXECUTIVE SUMMARY                                           */}
-        {/* ============================================================== */}
-        {content.executiveSummary && (
-          <div className="space-y-2 print-break-inside-avoid">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Executive Summary & Operational Scope
-            </h3>
-            <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
-              {content.executiveSummary}
-            </p>
+      {/* === EXECUTIVE SUMMARY === */}
+      {content.executiveSummary && (
+        <div style={{ padding: '0 36px', marginTop: 16 }} className="print-break-inside-avoid">
+          <div style={s.sectionBar}>
+            <h2 style={s.sectionTitle}>Executive Summary</h2>
           </div>
-        )}
+          <p style={{ ...s.bodyText, marginBottom: 8 }}>{content.executiveSummary}</p>
+        </div>
+      )}
 
-        {/* ============================================================== */}
-        {/* 4. VISUAL PROCESS FLOWCHART WITH SHAPES                        */}
-        {/* ============================================================== */}
-        <div className="space-y-3 border border-slate-200/90 rounded-2xl p-6 bg-slate-50/50 print-break-inside-avoid">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-brand-50 text-brand-600">
-                <GitBranch className="w-4 h-4" />
-              </div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                Sequential Process Flowchart & Milestones
-              </h3>
-            </div>
-            <span className="text-[10px] font-bold text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded border border-brand-200">
-              Milestone Sequence
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-3">
-            {[
-              {
-                step: 1,
-                title: 'Initiation',
-                desc: 'Pre-check & credentials',
-                shape: 'capsule',
-                role: content.metadata?.preparedBy || 'Operator',
-                bg: 'bg-emerald-50 border-emerald-300 text-emerald-900',
-              },
-              {
-                step: 2,
-                title: 'Execution',
-                desc: 'Core workflow actions',
-                shape: 'rect',
-                role: 'Specialist',
-                bg: 'bg-brand-50 border-brand-300 text-brand-900',
-              },
-              {
-                step: 3,
-                title: 'Verification',
-                desc: 'Quality & safety checks',
-                shape: 'diamond',
-                role: content.metadata?.reviewedBy || 'QA Inspector',
-                bg: 'bg-amber-50 border-amber-300 text-amber-900',
-              },
-              {
-                step: 4,
-                title: 'Resolution',
-                desc: 'Defect / rollback plan',
-                shape: 'rect',
-                role: 'Escalation Lead',
-                bg: 'bg-purple-50 border-purple-300 text-purple-900',
-              },
-              {
-                step: 5,
-                title: 'Approval',
-                desc: 'Sign-off & log audit',
-                shape: 'capsule',
-                role: content.metadata?.approvedBy || 'Approver',
-                bg: 'bg-slate-100 border-slate-300 text-slate-900',
-              },
-            ].map((node, nIdx) => (
-              <div key={node.step} className="flex flex-col items-center text-center relative group">
-                <div
-                  className={`w-full p-3.5 border-2 transition-transform shadow-xs space-y-1 ${node.bg} ${
-                    node.shape === 'capsule'
-                      ? 'rounded-full px-4'
-                      : node.shape === 'diamond'
-                      ? 'rounded-2xl rotate-0 border-dashed'
-                      : 'rounded-xl'
-                  }`}
-                >
-                  <span className="inline-block w-5 h-5 rounded-full bg-white/80 font-bold text-[10px] leading-5 text-slate-800 shadow-xs mb-0.5">
-                    {node.step}
-                  </span>
-                  <h4 className="text-xs font-bold leading-tight block truncate">{node.title}</h4>
-                  <p className="text-[10px] opacity-80 leading-tight">{node.desc}</p>
-                  <span className="text-[9px] font-mono opacity-70 block pt-0.5 truncate">
-                    Role: {node.role}
-                  </span>
+      {/* === PROCESS FLOWCHART (B&W) === */}
+      {content.flowchart && content.flowchart.length > 0 && (
+        <div style={{ padding: '0 36px', marginTop: 20 }} className="print-break-inside-avoid">
+          <div style={s.sectionBar}><h2 style={s.sectionTitle}>Process Flowchart</h2></div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {content.flowchart.map((step, idx) => (
+              <div key={step.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                <div style={{
+                  border: '1.5px solid #000', padding: '8px 16px', maxWidth: 460, width: '100%',
+                  backgroundColor: step.shape === 'start' || step.shape === 'end' ? '#000' : '#fff',
+                  color: step.shape === 'start' || step.shape === 'end' ? '#fff' : '#000',
+                  borderRadius: step.shape === 'start' || step.shape === 'end' ? 20 : 4,
+                  textAlign: 'center', fontSize: '9pt', fontWeight: 600,
+                }}>
+                  <div style={{ fontSize: '8pt', fontWeight: 400, opacity: 0.7 }}>{step.stepNumber}. {step.role}</div>
+                  <div>{step.label}</div>
+                  {step.description && <div style={{ fontSize: '8pt', fontWeight: 400, marginTop: 2, opacity: 0.85 }}>{step.description}</div>}
                 </div>
+                {idx < content.flowchart!.length - 1 && <div style={{ width: 2, height: 20, backgroundColor: '#000' }} />}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-                {nIdx < 4 && (
-                  <div className="hidden sm:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-slate-400">
-                    <ArrowRight className="w-3.5 h-3.5" />
+      {/* === MAIN SECTIONS === */}
+      <div style={{ padding: '0 36px', marginTop: 20 }}>
+        {content.sections.map((sec, index) => {
+          const isEditing = editingSectionId === sec.id;
+          return (
+            <div key={sec.id} style={{ marginBottom: 20 }} className="print-break-inside-avoid">
+              <div style={s.sectionBar}>
+                {isEditing ? (
+                  <input value={tempTitle} onChange={(e) => onTempTitleChange?.(e.target.value)} className="flex-1 font-bold text-sm border border-slate-300 px-2 py-1 rounded" style={{ fontWeight: 700, fontSize: '12pt' }} />
+                ) : (
+                  <h2 style={s.sectionTitle}>{index + 1}. {sec.title}</h2>
+                )}
+                {editable && !isEditing && (
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                    <button onClick={() => onMoveSection?.(index, 'up')} className="p-1 rounded hover:bg-slate-100" title="Move up"><ChevronUp className="w-3 h-3 text-slate-500" /></button>
+                    <button onClick={() => onMoveSection?.(index, 'down')} className="p-1 rounded hover:bg-slate-100" title="Move down"><ChevronDown className="w-3 h-3 text-slate-500" /></button>
+                    <button onClick={() => onStartEditSection?.(sec)} className="p-1 rounded hover:bg-brand-50" title="Edit"><Edit3 className="w-3 h-3 text-brand-600" /></button>
+                    <button onClick={() => onDeleteSection?.(sec.id)} className="p-1 rounded hover:bg-rose-50" title="Delete"><Trash2 className="w-3 h-3 text-rose-500" /></button>
                   </div>
                 )}
+                {editable && isEditing && (
+                  <button onClick={() => onSaveEditSection?.(sec.id)} className="flex items-center gap-1 px-2 py-1 bg-black text-white rounded text-xs font-semibold">
+                    <Check className="w-3 h-3" /> Save
+                  </button>
+                )}
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* ============================================================== */}
-        {/* 5. DOCUMENT REFERENCE FIGURES & OPERATIONAL VISUALS            */}
-        {/* ============================================================== */}
-        {displayImages && displayImages.length > 0 && (
-          <div className="space-y-3 print-break-inside-avoid">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
-                  <ImageIcon className="w-4 h-4" />
-                </div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                  Operational Reference Figures
-                </h3>
-              </div>
-              <span className="text-[10px] text-slate-400 font-mono">
-                Figures 1-{displayImages.length}
-              </span>
-            </div>
+              {isEditing ? (
+                <textarea value={tempContent} onChange={(e) => onTempContentChange?.(e.target.value)} rows={6} className="w-full border border-slate-300 rounded px-2 py-1 text-sm font-mono" />
+              ) : (
+                <>
+                  {sec.content && <div style={{ ...s.bodyText, marginBottom: 8 }}>{sec.content}</div>}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {displayImages.map((img, iIdx) => (
-                <div
-                  key={iIdx}
-                  className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-xs flex flex-col justify-between print:border-slate-300"
-                >
-                  <div className="relative aspect-video bg-slate-100 overflow-hidden">
-                    <img
-                      src={img.url}
-                      alt={img.alt}
-                      crossOrigin="anonymous"
-                      className="w-full h-full object-cover"
-                      loading="eager"
-                    />
-                  </div>
-                  <div className="p-3 bg-slate-50/80 border-t border-slate-100">
-                    <p className="text-xs font-medium text-slate-700 italic">
-                      {img.caption}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ============================================================== */}
-        {/* 6. OPERATIONAL KPI & PERFORMANCE BENCHMARKS                    */}
-        {/* ============================================================== */}
-        <div className="space-y-3 border border-slate-200/90 rounded-2xl p-6 bg-white shadow-xs print-break-inside-avoid">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
-                <BarChart3 className="w-4 h-4" />
-              </div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                Quality Thresholds & Performance Benchmarks
-              </h3>
-            </div>
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              Operational KPI
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-            {[
-              { label: 'First-Pass Yield', current: 98.4, target: 99.0, unit: '%', color: 'bg-emerald-500' },
-              { label: 'Procedure Compliance', current: 100, target: 100, unit: '%', color: 'bg-brand-500' },
-              { label: 'Incident SLA Resolution', current: 12.5, target: 15.0, unit: 'min', color: 'bg-indigo-500' },
-              { label: 'Defect / Error Rate', current: 0.04, target: 0.10, unit: '%', color: 'bg-amber-500' },
-            ].map((item, bIdx) => (
-              <div key={bIdx} className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/70 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-700">{item.label}</span>
-                  <span className="font-mono font-bold text-slate-900">
-                    {item.current}{item.unit}
-                  </span>
-                </div>
-
-                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${item.color}`}
-                    style={{ width: `${Math.min(100, (item.current / (item.target || 100)) * 100)}%` }}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] text-slate-400">
-                  <span>Target: {item.target}{item.unit}</span>
-                  <span className="text-emerald-600 font-semibold flex items-center gap-0.5">
-                    <CheckCircle2 className="w-2.5 h-2.5" /> Optimal
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ============================================================== */}
-        {/* 7. STRUCTURED SOP SECTIONS                                     */}
-        {/* ============================================================== */}
-        <div className="space-y-6">
-          {content.sections.map((sec, idx) => {
-            const isEditing = editable && editingSectionId === sec.id;
-            return (
-              <div
-                key={sec.id}
-                className="group border border-slate-200/90 rounded-2xl p-5 hover:border-brand-300 transition-all bg-white relative print-break-inside-avoid"
-              >
-                {/* Section Top Controls */}
-                <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
-                      Sec {idx + 1}
-                    </span>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={tempTitle}
-                        onChange={(e) => onTempTitleChange?.(e.target.value)}
-                        className="font-bold text-slate-900 text-base px-2 py-1 rounded border border-brand-400 focus:outline-none"
-                      />
-                    ) : (
-                      <h3 className="font-bold text-slate-900 text-base">
-                        {sec.title}
-                      </h3>
-                    )}
-                  </div>
-
-                  {editable && (
-                    <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition no-print">
-                      <button
-                        onClick={() => onMoveSection?.(idx, 'up')}
-                        disabled={idx === 0}
-                        title="Move Section Up"
-                        className="p-1 rounded text-slate-400 hover:text-slate-700 disabled:opacity-20"
-                      >
-                        <ChevronUp className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onMoveSection?.(idx, 'down')}
-                        disabled={idx === content.sections.length - 1}
-                        title="Move Section Down"
-                        className="p-1 rounded text-slate-400 hover:text-slate-700 disabled:opacity-20"
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                      </button>
-                      {isEditing ? (
-                        <button
-                          onClick={() => onSaveEditSection?.(sec.id)}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-semibold flex items-center gap-1"
-                        >
-                          <Check className="w-3 h-3" />
-                          <span>Done</span>
-                        </button>
+                  {sec.items && sec.items.length > 0 && (
+                    <div style={{ marginLeft: 8 }}>
+                      {sec.type === 'checklist' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {sec.items.map((item, i) => (
+                            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: '10pt' }}>
+                              <div style={{ width: 14, height: 14, border: '1.5px solid #000', flexShrink: 0, marginTop: 2, backgroundColor: '#fff' }} />
+                              <span style={{ lineHeight: '1.5' }}>{item}</span>
+                            </div>
+                          ))}
+                        </div>
                       ) : (
-                        <button
-                          onClick={() => onStartEditSection?.(sec)}
-                          title="Edit Section Text"
-                          className="p-1 rounded text-slate-400 hover:text-brand-600"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
+                        <ol style={{ paddingLeft: 20, margin: 0 }}>
+                          {sec.items.map((item, i) => (
+                            <li key={i} style={{ fontSize: '10pt', lineHeight: '1.6', marginBottom: 4, color: '#000' }}>{item}</li>
+                          ))}
+                        </ol>
                       )}
-                      <button
-                        onClick={() => onDeleteSection?.(sec.id)}
-                        title="Delete Section"
-                        className="p-1 rounded text-slate-400 hover:text-rose-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   )}
-                </div>
 
-                {/* Section Body */}
-                {isEditing ? (
-                  <textarea
-                    rows={4}
-                    value={tempContent}
-                    onChange={(e) => onTempContentChange?.(e.target.value)}
-                    className="w-full p-3 rounded-xl border border-brand-400 focus:outline-none text-xs font-mono leading-relaxed"
-                  />
-                ) : (
-                  <div className="space-y-3 text-xs text-slate-700 leading-relaxed">
-                    {sec.content && (
-                      <p className="whitespace-pre-line">{sec.content}</p>
-                    )}
-
-                    {/* Items (Checklist or Steps) */}
-                    {sec.items && sec.items.length > 0 && (
-                      <ul className="space-y-2 pl-1">
-                        {sec.items.map((item, itemIdx) => (
-                          <li key={itemIdx} className="flex items-start gap-2.5">
-                            {sec.type === 'checklist' ? (
-                              <input
-                                type="checkbox"
-                                className="rounded text-brand-600 focus:ring-brand-500 mt-0.5 cursor-pointer"
-                              />
-                            ) : (
-                              <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 text-[10px]">
-                                {itemIdx + 1}
-                              </span>
-                            )}
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {/* Table Data */}
-                    {sec.tableData && (
-                      <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                        <table className="w-full text-left text-xs border-collapse">
-                          <thead className="bg-slate-50 text-slate-800 font-bold border-b border-slate-200">
-                            <tr>
-                              {sec.tableData.headers.map((h, hIdx) => (
-                                <th key={hIdx} className="p-2.5 font-semibold">{h}</th>
-                              ))}
+                  {sec.tableData && sec.tableData.headers && sec.tableData.rows && (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr>
+                            {sec.tableData.headers.map((h, i) => <th key={i} style={s.tableHeader}>{h}</th>)}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sec.tableData.rows.map((row, ri) => (
+                            <tr key={ri}>
+                              {row.map((cell, ci) => <td key={ci} style={{ ...s.tableCell, backgroundColor: ri % 2 === 0 ? '#fff' : '#fafafa' }}>{cell}</td>)}
                             </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {sec.tableData.rows.map((row, rIdx) => (
-                              <tr key={rIdx} className="hover:bg-slate-50/50">
-                                {row.map((cell, cIdx) => (
-                                  <td key={cIdx} className="p-2.5 text-slate-700">{cell}</td>
-                                ))}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
 
-        {/* ============================================================== */}
-        {/* 8. FORMAL PROCEDURAL APPROVALS & SIGN-OFF                     */}
-        {/* ============================================================== */}
-        <div className="border-t-2 border-slate-200 pt-6 space-y-3 print-break-inside-avoid">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-            Formal Procedural Approvals & Governance Sign-Off
-          </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-4">
-              <span className="text-[10px] font-bold uppercase text-slate-400 block">Prepared By</span>
-              <div className="h-6 border-b border-dashed border-slate-300" />
-              <p className="text-xs font-semibold text-slate-800">{content.metadata?.preparedBy}</p>
+                  {sec.type === 'warning' && (
+                    <div style={{ border: '1px solid #000', padding: '8px 12px', backgroundColor: '#fafafa', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <AlertTriangle style={{ width: 14, height: 14, flexShrink: 0, marginTop: 1 }} />
+                      <span style={{ fontSize: '9.5pt', fontWeight: 500 }}>{sec.content}</span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
-            <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-4">
-              <span className="text-[10px] font-bold uppercase text-slate-400 block">Reviewed By</span>
-              <div className="h-6 border-b border-dashed border-slate-300" />
-              <p className="text-xs font-semibold text-slate-800">{content.metadata?.reviewedBy}</p>
-            </div>
-            <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-4">
-              <span className="text-[10px] font-bold uppercase text-slate-400 block">Authorized Approver</span>
-              <div className="h-6 border-b border-dashed border-slate-300" />
-              <p className="text-xs font-semibold text-slate-800">{content.metadata?.approvedBy}</p>
-            </div>
-          </div>
-        </div>
+          );
+        })}
+      </div>
 
-        {/* Document Footer Watermark */}
-        <div className="border-t border-slate-100 pt-4 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-          <span>CONFIDENTIAL & PROPRIETARY — SUBJECT TO FORMAL APPROVAL</span>
-          <span>{content.metadata?.sopId || 'SOP-001'} | v{content.metadata?.version || '1.0'}</span>
-        </div>
+      {/* === AUTHORIZATION BLOCK === */}
+      <div style={{ padding: '0 36px', marginTop: 24, marginBottom: 24 }} className="print-break-inside-avoid">
+        <div style={s.sectionBar}><h2 style={s.sectionTitle}>Document Authorization</h2></div>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={s.tableHeader}>Role</th>
+              <th style={s.tableHeader}>Name</th>
+              <th style={s.tableHeader}>Signature</th>
+              <th style={s.tableHeader}>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { role: 'Prepared By', name: meta.preparedBy, date: meta.effectiveDate },
+              { role: 'Reviewed By', name: meta.reviewedBy, date: '' },
+              { role: 'Approved By', name: meta.approvedBy, date: '' },
+            ].map((r, i) => (
+              <tr key={i}>
+                <td style={{ ...s.tableCell, fontWeight: 600 }}>{r.role}</td>
+                <td style={s.tableCell}>{r.name}</td>
+                <td style={{ ...s.tableCell, minWidth: 100 }}>&nbsp;</td>
+                <td style={s.tableCell}>{r.date}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
+      {/* === FOOTER === */}
+      <div style={{ borderTop: '1.5px solid #000', padding: '8px 36px', display: 'flex', justifyContent: 'space-between', fontSize: '8pt', color: '#000', backgroundColor: '#f8f8f8' }}>
+        <span>CONFIDENTIAL — FOR INTERNAL ORGANIZATIONAL USE ONLY</span>
+        <span>SOPFlow | {content.organization || 'Organization'} | v{meta.version}</span>
       </div>
     </div>
   );

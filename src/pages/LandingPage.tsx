@@ -67,7 +67,7 @@ export const LandingPage: React.FC = () => {
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-950 tracking-tight leading-[1.12]">
               Standard Operating Procedures.{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-500">
-                Engineered in Minutes.
+                Documented in Minutes.
               </span>
             </h1>
 
@@ -101,7 +101,7 @@ export const LandingPage: React.FC = () => {
               </span>
               <span className="flex items-center gap-1.5">
                 <LayoutTemplate className="w-4 h-4 text-brand-600" />
-                11 Verified Layout Formats
+                24 Department Templates
               </span>
               <span className="flex items-center gap-1.5">
                 <Download className="w-4 h-4 text-indigo-600" />
@@ -294,7 +294,7 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
             <span className="text-xs font-bold text-brand-400 uppercase tracking-widest">Workflow Engine</span>
-            <h2 className="text-3xl font-extrabold tracking-tight">How StandardOps Works</h2>
+            <h2 className="text-3xl font-extrabold tracking-tight">How SOPFlow Works</h2>
             <p className="text-sm text-slate-400">From initial inputs to audit-ready, downloadable PDF in 3 structured phases.</p>
           </div>
 

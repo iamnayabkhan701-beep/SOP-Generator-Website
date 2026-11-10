@@ -167,7 +167,7 @@ export const Dashboard: React.FC = () => {
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-extrabold tracking-tight text-white">StandardOps</h2>
+              <h2 className="text-sm font-extrabold tracking-tight text-white">SOPFlow</h2>
               <span className="text-[10px] text-slate-400 font-mono">Enterprise Platform</span>
             </div>
           </div>

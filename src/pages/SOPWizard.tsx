@@ -37,6 +37,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { TemplateGallery } from '../components/TemplateGallery';
+import { DepartmentSelector } from '../components/DepartmentSelector';
+import { DepartmentTemplateList } from '../components/DepartmentTemplateList';
+import type { DepartmentTemplate } from '../data/departmentTemplates';
 import {
   CATEGORIES,
   THEMES,
@@ -58,10 +61,11 @@ export const SOPWizard: React.FC = () => {
   const { user } = useAuth();
 
   const [step, setStep] = useState<number>(1);
+  const [step1SubView, setStep1SubView] = useState<'departments' | 'templates'>('departments');
   const [loadingInitial, setLoadingInitial] = useState(false);
 
   // Wizard State
-  const [selectedCategory, setSelectedCategory] = useState<SOPCategory>('it');
+  const [selectedCategory, setSelectedCategory] = useState<SOPCategory>('warehouse');
   const [selectedTheme, setSelectedTheme] = useState<SOPTheme>('professional-blue');
   const [selectedStructure, setSelectedStructure] = useState<SOPStructure>('standard');
   const [targetPageLength, setTargetPageLength] = useState<TargetPageLength>('standard');
@@ -130,6 +134,24 @@ export const SOPWizard: React.FC = () => {
         [key]: val,
       },
     }));
+  };
+
+  const handleSelectDepartmentTemplate = (tpl: DepartmentTemplate) => {
+    setSelectedCategory(tpl.departmentId);
+    setSelectedStructure(tpl.structure);
+    const catMeta = CATEGORIES.find((c) => c.id === tpl.departmentId);
+    setFormData((prev) => ({
+      ...prev,
+      title: tpl.title,
+      department: catMeta ? catMeta.name : prev.department,
+      purpose: tpl.purpose,
+      scope: tpl.scope,
+      responsibilities: tpl.responsibilities,
+      procedureDetails: tpl.procedureDetails,
+      safetyRisk: tpl.safetyRisk || prev.safetyRisk || '',
+    }));
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNextStep = () => {
@@ -279,65 +301,33 @@ export const SOPWizard: React.FC = () => {
           </div>
         </div>
 
-        {/* STEP 1: CATEGORY SELECTION */}
+        {/* STEP 1: DEPARTMENT & TEMPLATE SELECTION */}
         {step === 1 && (
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-in fade-in duration-200">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600">Step 1 of 4</span>
-              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-                Select SOP Department & Domain
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Your department choice tailors the fields, regulatory safety disclaimers, and suggested structure.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {CATEGORIES.map((cat) => {
-                const isSelected = selectedCategory === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedCategory(cat.id);
-                      setFormData((p) => ({
-                        ...p,
-                        department: cat.name,
-                      }));
-                    }}
-                    className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3.5 ${
-                      isSelected
-                        ? 'border-brand-600 bg-brand-50/50 ring-2 ring-brand-500/20 shadow-sm'
-                        : 'border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/50'
-                    }`}
-                  >
-                    <div
-                      className={`p-2.5 rounded-xl shrink-0 ${
-                        isSelected ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      {getCatIcon(cat.iconName)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className={`text-sm font-bold ${isSelected ? 'text-brand-900' : 'text-slate-900'}`}>
-                          {cat.name}
-                        </span>
-                        {cat.isRegulatedOrHighRisk && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-                            Regulated
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                        {cat.description}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            {step1SubView === 'departments' ? (
+              <DepartmentSelector
+                selectedDept={selectedCategory}
+                onSelectDepartment={(deptId) => {
+                  setSelectedCategory(deptId);
+                  const cat = CATEGORIES.find((c) => c.id === deptId);
+                  if (cat) {
+                    setFormData((p) => ({ ...p, department: cat.name }));
+                  }
+                  setStep1SubView('templates');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            ) : (
+              <DepartmentTemplateList
+                departmentId={selectedCategory}
+                onBack={() => setStep1SubView('departments')}
+                onSelectTemplate={(tpl) => handleSelectDepartmentTemplate(tpl)}
+                onCreateCustom={() => {
+                  setStep(2);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            )}
 
             {/* High-Risk Disclaimer Banner if applicable */}
             {activeCategoryMeta?.isRegulatedOrHighRisk && (
@@ -350,16 +340,18 @@ export const SOPWizard: React.FC = () => {
               </div>
             )}
 
-            <div className="flex justify-end pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={handleNextStep}
-                className="px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-md shadow-brand-500/20 transition flex items-center gap-2"
-              >
-                <span>Continue to Theme & Structure</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+            {step1SubView === 'departments' && (
+              <div className="flex justify-end pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setStep1SubView('templates')}
+                  className="px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-md shadow-brand-500/20 transition flex items-center gap-2"
+                >
+                  <span>View Templates for Selected Department</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         )}
 

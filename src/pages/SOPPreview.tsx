@@ -19,12 +19,8 @@ import {
   uploadPDFToSupabase,
 } from '../lib/supabase';
 import type { SOPDocument, SOPGeneratedContent, SOPSection } from '../types/sop';
-import {
-  generateSOPPdf,
-  generateSOPPdfFromElement,
-  printDocumentViaBrowser,
-} from '../lib/pdfGenerator';
-import { SOPDocumentView } from '../components/SOPDocumentView';
+import { generateSOPPdf, generateSOPPdfFromElement, printDocumentViaBrowser } from '../lib/pdfGenerator';
+import { A4PagedDocument } from '../components/A4PagedDocument';
 
 export const SOPPreview: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -294,25 +290,24 @@ export const SOPPreview: React.FC = () => {
           </div>
         </div>
 
-        {/* Paper Document Preview (1:1 Unified SOPDocumentView) */}
-        <div ref={previewRef}>
-          <SOPDocumentView
-            content={content}
-            theme={doc.theme}
-            structure={doc.structure}
-            category={doc.category}
-            editable={true}
-            editingSectionId={editingSectionId}
-            tempTitle={tempTitle}
-            tempContent={tempContent}
-            onStartEditSection={startEditSection}
-            onSaveEditSection={saveEditSection}
-            onMoveSection={moveSection}
-            onDeleteSection={deleteSection}
-            onTempTitleChange={setTempTitle}
-            onTempContentChange={setTempContent}
-          />
-        </div>
+        {/* Paper Document Preview (1:1 Unified A4 Paged Document) */}
+        <A4PagedDocument
+          documentRef={previewRef}
+          content={content}
+          theme={doc.theme}
+          structure={doc.structure}
+          category={doc.category}
+          editable={true}
+          editingSectionId={editingSectionId}
+          tempTitle={tempTitle}
+          tempContent={tempContent}
+          onStartEditSection={startEditSection}
+          onSaveEditSection={saveEditSection}
+          onMoveSection={moveSection}
+          onDeleteSection={deleteSection}
+          onTempTitleChange={setTempTitle}
+          onTempContentChange={setTempContent}
+        />
 
       </div>
     </div>
