@@ -90,6 +90,52 @@ export async function generateSOPPdfFromElement(
     })
   );
 
+  // Check if element contains discrete .a4-page-sheet elements
+  const sheets = element.querySelectorAll<HTMLElement>('.a4-page-sheet');
+  if (sheets.length > 0) {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    for (let i = 0; i < sheets.length; i++) {
+      if (i > 0) doc.addPage();
+      const sheet = sheets[i];
+      const sheetCanvas = await html2canvas(sheet, {
+        scale: SCALE,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+        onclone: (clonedDoc) => {
+          const imgs = clonedDoc.querySelectorAll('img');
+          imgs.forEach((img) => {
+            img.style.display = 'block';
+            img.crossOrigin = 'anonymous';
+          });
+        },
+      });
+
+      const pageImgData = sheetCanvas.toDataURL('image/jpeg', 0.96);
+      doc.addImage(pageImgData, 'JPEG', 0, 0, A4_WIDTH_MM, A4_HEIGHT_MM);
+    }
+
+    const safeTitle = (filename || content.documentTitle || 'SOPFlow_Document')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .slice(0, 50);
+
+    const pdfBlob = doc.output('blob');
+    return {
+      blob: pdfBlob,
+      pageCount: sheets.length,
+      filename: `${safeTitle}.pdf`,
+    };
+  }
+
+  // Fallback for single-container elements
   const canvas = await html2canvas(element, {
     scale: SCALE,
     useCORS: true,

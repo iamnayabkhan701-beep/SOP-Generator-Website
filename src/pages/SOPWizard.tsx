@@ -39,6 +39,7 @@ import { useAuth } from '../context/AuthContext';
 import { TemplateGallery } from '../components/TemplateGallery';
 import { DepartmentSelector } from '../components/DepartmentSelector';
 import { DepartmentTemplateList } from '../components/DepartmentTemplateList';
+import { DepartmentSchemaForm } from '../components/DepartmentSchemaForm';
 import type { DepartmentTemplate } from '../data/departmentTemplates';
 import {
   CATEGORIES,
@@ -353,13 +354,25 @@ export const SOPWizard: React.FC = () => {
             )}
 
             {step1SubView === 'departments' && (
-              <div className="flex justify-end pt-4 border-t border-slate-100">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setStep1SubView('templates')}
-                  className="px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-md shadow-brand-500/20 transition flex items-center gap-2"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-xs flex items-center justify-center gap-1.5 transition"
                 >
-                  <span>View Templates for Selected Department</span>
+                  <span>Browse {activeCategoryMeta?.name} Topic Templates</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep(2);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-md shadow-brand-500/20 transition flex items-center justify-center gap-2"
+                >
+                  <span>Continue to Structure & Theme</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -452,420 +465,32 @@ export const SOPWizard: React.FC = () => {
           </div>
         )}
 
-        {/* STEP 3: DYNAMIC CATEGORY-SPECIFIC FORM */}
+        {/* STEP 3: DYNAMIC DEPARTMENT-SPECIFIC SCHEMA FORM */}
         {step === 3 && (
-          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-in fade-in duration-200">
-            {/* Active Topic Banner */}
-            {formData.selectedTopic && (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-900 text-white rounded-2xl shadow-sm gap-3">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400">
-                      Active Department Topic
-                    </span>
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-medium">
-                      {formData.department || activeCategoryMeta?.name}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-bold text-white tracking-tight">
-                    {formData.selectedTopic}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep(1);
-                    setStep1SubView('templates');
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition shrink-0 self-start sm:self-center"
-                >
-                  <span>Change Topic</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
+          <div className="space-y-6">
+            <DepartmentSchemaForm
+              departmentId={selectedCategory}
+              formData={formData}
+              onChangeFormData={(updates) => setFormData((p) => ({ ...p, ...updates }))}
+              departmentAnswers={formData.categorySpecific || {}}
+              onChangeDepartmentAnswer={(fieldId, val) => updateCategorySpecific(fieldId, val)}
+            />
 
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600">Step 3 of 4</span>
-              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-                Customize SOP Parameters & Details
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                All fields are pre-filled with industry-standard procedures for this topic. Review and customize for your organization.
-              </p>
-            </div>
-
-            {/* General Metadata */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Organization / Company Name <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.companyName}
-                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                  placeholder="e.g. Apex Global Corp"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Department / Business Unit <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  placeholder="e.g. Quality Assurance, Warehouse Operations"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                  required
-                />
-              </div>
-
-              <div className="sm:col-span-3">
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  SOP Document Title <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. Hazardous Chemical Spill Clean-Up Protocol"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-semibold"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  SOP ID / Reference Number
-                </label>
-                <input
-                  type="text"
-                  value={formData.sopId || ''}
-                  onChange={(e) => setFormData({ ...formData, sopId: e.target.value })}
-                  placeholder="e.g. SOP-QA-101"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Version
-                </label>
-                <input
-                  type="text"
-                  value={formData.version || '1.0'}
-                  onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                  placeholder="e.g. 1.0"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Effective Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.effectiveDate}
-                  onChange={(e) => setFormData({ ...formData, effectiveDate: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                />
-              </div>
-            </div>
-
-            {/* Core Purpose, Scope & Responsibilities */}
-            <div className="space-y-4 border-t border-slate-100 pt-5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  1. Purpose & Objective <span className="text-rose-500">*</span>
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.purpose}
-                  onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-                  placeholder="What is the key goal of this SOP?"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  2. Scope & Applicability
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.scope}
-                  onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
-                  placeholder="Who, which departments, sites, and processes are covered by this procedure?"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  3. Roles & Responsibilities
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.responsibilities || ''}
-                  onChange={(e) => setFormData({ ...formData, responsibilities: e.target.value })}
-                  placeholder="e.g. Quality Manager: Oversees auditing; Shift Lead: Enforces daily checklist execution"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  4. Required Resources, Equipment & Systems
-                </label>
-                <input
-                  type="text"
-                  value={formData.requiredResources || formData.requiredTools || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      requiredResources: e.target.value,
-                      requiredTools: e.target.value,
-                    })
-                  }
-                  placeholder="e.g. ERP Software, Calibrated Micrometer, Level 2 PPE, Cleanroom Chamber"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  5. Detailed Step-by-Step Procedure
-                </label>
-                <textarea
-                  rows={6}
-                  value={formData.procedureDetails}
-                  onChange={(e) => setFormData({ ...formData, procedureDetails: e.target.value })}
-                  placeholder="Detail step-by-step procedures. The generator formats, numbers, and aligns every step."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs font-mono leading-relaxed"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                    6. Quality Checks & Acceptance Criteria
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={formData.qualityChecks || ''}
-                    onChange={(e) => setFormData({ ...formData, qualityChecks: e.target.value })}
-                    placeholder="e.g. Tolerance ±0.05mm, Dual supervisor sign-off, Zero defect tolerance"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                    7. Safety Controls & Risk Mitigation
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={formData.safetyRisk || ''}
-                    onChange={(e) => setFormData({ ...formData, safetyRisk: e.target.value })}
-                    placeholder="e.g. LOTO Protocol, PHI data encryption, Emergency shut-off valve proximity"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                    8. Documentation & Record Retention
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.documentationRecords || ''}
-                    onChange={(e) => setFormData({ ...formData, documentationRecords: e.target.value })}
-                    placeholder="e.g. Log sheet ARCH-04 retained for 7 years per regulatory standards"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                    9. Regulatory References & Standards
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.references || formData.relatedDocuments || ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        references: e.target.value,
-                        relatedDocuments: e.target.value,
-                      })
-                    }
-                    placeholder="e.g. ISO 9001:2015 Clause 8.5, OSHA 1910.120, FDA 21 CFR Part 11"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Department-Specific Conditional Fields */}
-            <div className="border-t border-slate-100 pt-5 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-brand-700 flex items-center gap-1.5">
-                <span>Domain Specific Parameters ({activeCategoryMeta?.name})</span>
-              </h3>
-
-              {selectedCategory === 'it' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Target System / Application</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Customer Billing Service, Oracle DB"
-                      onChange={(e) => updateCategorySpecific('systemName', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Rollback / Fallback Trigger</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Error rate > 0.5% for 3 consecutive minutes"
-                      onChange={(e) => updateCategorySpecific('backupRollbackPlan', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {selectedCategory === 'manufacturing' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Machinery / Equipment Specs</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. CNC Milling Machine Model T-800"
-                      onChange={(e) => updateCategorySpecific('equipmentSpecs', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Critical Process Parameters</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Temperature 180°C ± 2°C, Pressure 4.2 Bar"
-                      onChange={(e) => updateCategorySpecific('processParameters', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {selectedCategory === 'quality' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Sampling & Inspection Rate</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 5 random units per pallet of 100"
-                      onChange={(e) => updateCategorySpecific('samplingCriteria', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Defect Escalation Threshold</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Immediate line quarantine if defect > 0"
-                      onChange={(e) => updateCategorySpecific('nonconformanceProtocol', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {selectedCategory === 'healthcare' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">HIPAA / Confidentiality Protocol</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. EHR screen lock within 60s, encrypted audit logging"
-                      onChange={(e) => updateCategorySpecific('confidentialityProtocol', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Administrative Escalation Contact</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Chief Privacy Officer or Hospital Administrator"
-                      onChange={(e) => updateCategorySpecific('escalationContact', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Sign-off Personnel */}
-            <div className="border-t border-slate-100 pt-5">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
-                Formal Sign-Off Personnel
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Prepared By</label>
-                  <input
-                    type="text"
-                    value={formData.preparedBy}
-                    onChange={(e) => setFormData({ ...formData, preparedBy: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Reviewed By</label>
-                  <input
-                    type="text"
-                    value={formData.reviewedBy}
-                    onChange={(e) => setFormData({ ...formData, reviewedBy: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Approved By</label>
-                  <input
-                    type="text"
-                    value={formData.approvedBy}
-                    onChange={(e) => setFormData({ ...formData, approvedBy: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between pt-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
               <button
                 type="button"
                 onClick={handlePrevStep}
                 className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-semibold text-xs flex items-center gap-1.5"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
+                <span>Back to Structure & Theme</span>
               </button>
               <button
                 type="button"
                 onClick={handleNextStep}
                 className="px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-md shadow-brand-500/20 transition flex items-center gap-2"
               >
-                <span>Continue to Page Length & Instructions</span>
+                <span>Continue to Page Length & Generate</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

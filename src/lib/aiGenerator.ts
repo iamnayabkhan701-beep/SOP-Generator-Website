@@ -341,6 +341,29 @@ function buildStructuredSections(
     items: prereqItems,
   });
 
+  // 5B. DEPARTMENT-SPECIFIC OPERATIONAL CRITERIA & CONTROLS
+  const catEntries = Object.entries(catSpec).filter(([_, v]) => typeof v === 'string' && v.trim().length > 0);
+  if (catEntries.length > 0) {
+    const formattedRows = catEntries.map(([k, v]) => {
+      const humanLabel = k
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (str) => str.toUpperCase())
+        .trim();
+      return [humanLabel, v as string];
+    });
+
+    sections.push({
+      id: 'sec-dept-criteria',
+      title: '5B. Department Operational Criteria & Governance Parameters',
+      type: 'table',
+      content: `Specific operational specifications, quality criteria, and compliance parameters established for ${formData.department || category.toUpperCase()}:`,
+      tableData: {
+        headers: ['Operational Dimension / Parameter', 'Standard Operating Requirement & Verification'],
+        rows: formattedRows,
+      },
+    });
+  }
+
   // 6. Structure-Specific Core Procedures
   if (structure === 'raci-matrix') {
     sections.push({
