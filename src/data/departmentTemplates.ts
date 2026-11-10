@@ -16,8 +16,10 @@ export interface DepartmentTopic {
   responsibilities: string;
   requiredResources: string;
   procedureDetails: string;
-  safetyRisk: string;
-  qualityChecks: string;
+  safetyRisk?: string;
+  safetyRisks?: string;
+  qualityChecks?: string;
+  qualityControls?: string;
   documentationRecords: string;
   references: string;
 }
@@ -687,45 +689,15 @@ import { ALL_REMAINING_TOPICS } from './allDepartmentTopics';
 import { EXTENDED_DEPARTMENT_TOPICS } from './departmentTopicsExtended';
 import { FINAL_DEPARTMENT_TOPICS } from './departmentTopicsFinal';
 
-// Helper functions for easy querying
-export function getTopicsForDepartment(deptId: SOPCategory): DepartmentTopic[] {
-  // Normalize aliases
-  let targetId = deptId;
-  if (deptId === 'office') targetId = 'administration';
-  if (deptId === 'quality') targetId = 'qc';
-  if (deptId === 'safety') targetId = 'security';
-  if (deptId === 'food-service') targetId = 'food-safety';
+import {
+  ALL_SOPS,
+  getSOPsForDepartment,
+  getSOPById,
+} from './sopLibraryRegistry';
 
-  const allTopics = [
-    ...DEPARTMENT_TOPICS,
-    ...ALL_REMAINING_TOPICS,
-    ...EXTENDED_DEPARTMENT_TOPICS,
-    ...FINAL_DEPARTMENT_TOPICS,
-  ];
-
-  const matches = allTopics.filter((t) => t.departmentId === targetId);
-  if (matches.length > 0) return matches;
-
-  // Fallback to direct matches or all topics
-  return allTopics.filter((t) => t.departmentId === deptId);
-}
-
-export function getTopicById(id: string): DepartmentTopic | undefined {
-  const allTopics = [
-    ...DEPARTMENT_TOPICS,
-    ...ALL_REMAINING_TOPICS,
-    ...EXTENDED_DEPARTMENT_TOPICS,
-    ...FINAL_DEPARTMENT_TOPICS,
-  ];
-  return allTopics.find((t) => t.id === id);
-}
-
-// Backward-compatible aliases
-export const DEPARTMENT_TEMPLATES = [
-  ...DEPARTMENT_TOPICS,
-  ...ALL_REMAINING_TOPICS,
-  ...EXTENDED_DEPARTMENT_TOPICS,
-  ...FINAL_DEPARTMENT_TOPICS,
-];
-export const getTemplatesForDepartment = getTopicsForDepartment;
-export const getTemplateById = getTopicById;
+// Backward-compatible query functions returning full library
+export const getTopicsForDepartment = getSOPsForDepartment;
+export const getTopicById = getSOPById;
+export const DEPARTMENT_TEMPLATES = ALL_SOPS;
+export const getTemplatesForDepartment = getSOPsForDepartment;
+export const getTemplateById = getSOPById;

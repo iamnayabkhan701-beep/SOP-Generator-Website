@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import type { SOPFormData } from '../types/sop';
 import { getDepartmentSchema, type DepartmentTopicPreset } from '../data/departmentSchemas';
+import { getSOPsForDepartment } from '../data/sopLibraryRegistry';
+import type { DepartmentTopic } from '../data/departmentTemplates';
 
 interface DepartmentSchemaFormProps {
   departmentId: string;
@@ -27,6 +29,25 @@ export const DepartmentSchemaForm: React.FC<DepartmentSchemaFormProps> = ({
   onChangeDepartmentAnswer,
 }) => {
   const schema = getDepartmentSchema(departmentId);
+  const librarySOPs = getSOPsForDepartment(departmentId as any);
+
+  const handleApplyLibrarySOP = (sop: DepartmentTopic) => {
+    onChangeFormData({
+      title: sop.title,
+      selectedTopic: sop.topicName,
+      sopId: sop.id.toUpperCase(),
+      purpose: sop.purpose,
+      scope: sop.scope,
+      responsibilities: sop.responsibilities,
+      procedureDetails: sop.procedureDetails,
+      requiredResources: sop.requiredResources,
+      requiredTools: sop.requiredResources,
+      qualityChecks: sop.qualityChecks || sop.qualityControls || '',
+      safetyRisk: sop.safetyRisk || sop.safetyRisks || '',
+      documentationRecords: sop.documentationRecords,
+      references: sop.references,
+    });
+  };
 
   const handleApplyPreset = (preset: DepartmentTopicPreset) => {
     onChangeFormData({
@@ -89,24 +110,26 @@ export const DepartmentSchemaForm: React.FC<DepartmentSchemaFormProps> = ({
       </div>
 
       {/* Recommended Topics / Presets Bar */}
-      {schema.topics.length > 0 && (
+      {(schema.topics.length > 0 || librarySOPs.length > 0) && (
         <div className="bg-brand-50/60 p-5 rounded-2xl border border-brand-100/80 space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <span className="text-xs font-bold uppercase tracking-wider text-brand-900 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-brand-600" />
-              <span>Quick-Load Industry Standard Templates ({schema.topics.length} Available)</span>
+              <span>
+                Standard {schema.name} SOP Library ({Math.max(schema.topics.length, librarySOPs.length)} Templates Available)
+              </span>
             </span>
-            <span className="text-[11px] text-brand-700 hidden sm:inline">
-              Click any topic to pre-fill all questions with audited criteria
+            <span className="text-[11px] text-brand-700">
+              Click any topic to pre-fill all questions with industry-audited criteria
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-80 overflow-y-auto pr-1">
             {schema.topics.map((t, idx) => {
               const isSelected = formData.selectedTopic === t.topicName;
               return (
                 <button
-                  key={idx}
+                  key={`schema-${idx}`}
                   type="button"
                   onClick={() => handleApplyPreset(t)}
                   className={`text-left p-3 rounded-xl border transition flex flex-col justify-between group ${
@@ -129,7 +152,7 @@ export const DepartmentSchemaForm: React.FC<DepartmentSchemaFormProps> = ({
                   </div>
                   <span
                     className={`text-[10px] mt-2 font-medium ${
-                      isSelected ? 'text-brand-300' : 'text-brand-600 group-hover:underline'
+                      isSelected ? 'text-brand-300 font-bold' : 'text-brand-600 group-hover:underline'
                     }`}
                   >
                     {isSelected ? '✓ Active Template' : 'Load Template →'}
@@ -137,6 +160,45 @@ export const DepartmentSchemaForm: React.FC<DepartmentSchemaFormProps> = ({
                 </button>
               );
             })}
+
+            {/* Also render library SOPs if they differ from schema topics */}
+            {librarySOPs
+              .filter((lib) => !schema.topics.some((st) => st.topicName.toLowerCase() === lib.topicName.toLowerCase()))
+              .map((libSop) => {
+                const isSelected = formData.selectedTopic === libSop.topicName;
+                return (
+                  <button
+                    key={`lib-${libSop.id}`}
+                    type="button"
+                    onClick={() => handleApplyLibrarySOP(libSop)}
+                    className={`text-left p-3 rounded-xl border transition flex flex-col justify-between group ${
+                      isSelected
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                        : 'bg-white hover:bg-slate-50 border-slate-200/90 text-slate-800'
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <span
+                        className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold ${
+                          isSelected ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {libSop.id.toUpperCase().replace('SOP-', '')}
+                      </span>
+                      <h4 className="text-xs font-bold tracking-tight line-clamp-1 mt-1">
+                        {libSop.topicName}
+                      </h4>
+                    </div>
+                    <span
+                      className={`text-[10px] mt-2 font-medium ${
+                        isSelected ? 'text-brand-300 font-bold' : 'text-brand-600 group-hover:underline'
+                      }`}
+                    >
+                      {isSelected ? '✓ Active Template' : 'Load Template →'}
+                    </span>
+                  </button>
+                );
+              })}
           </div>
         </div>
       )}

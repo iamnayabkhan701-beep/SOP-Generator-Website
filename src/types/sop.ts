@@ -21,6 +21,8 @@ export type SOPCategory =
   | 'maintenance'
   | 'security'
   | 'rd'
+  | 'inventory'
+  | 'ehs'
   // Legacy / aliases
   | 'office'
   | 'safety'
@@ -443,6 +445,26 @@ export const CATEGORIES: CategoryMetadata[] = [
     name: 'Research & Development (R&D)',
     description: 'Concept feasibility, prototype testing, patent disclosure, material stress testing, and pilot handover.',
     iconName: 'Microscope'
+  },
+  {
+    id: 'inventory',
+    name: 'Inventory Management',
+    description: 'Perpetual cycle counting, FIFO/FEFO rotation, ABC classification, stock valuation, and shrinkage control.',
+    iconName: 'Layers'
+  },
+  {
+    id: 'logistics',
+    name: 'Logistics & Transportation',
+    description: 'Carrier route dispatch, freight auditing, international customs compliance, and cold chain telemetry.',
+    iconName: 'Truck'
+  },
+  {
+    id: 'ehs',
+    name: 'Environmental Health & Safety (EHS)',
+    description: 'OSHA compliance, Job Hazard Analysis (JHA), hazardous waste containment, and workplace safety audits.',
+    iconName: 'ShieldAlert',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'EHS standard operating procedures must comply with OSHA 1910, EPA, and local environmental standards.'
   },
   // Legacy / backward-compatible aliases:
   {
