@@ -143,14 +143,25 @@ export const SOPWizard: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       title: tpl.title,
+      selectedTopic: tpl.topicName || tpl.title,
       department: catMeta ? catMeta.name : prev.department,
       purpose: tpl.purpose,
       scope: tpl.scope,
       responsibilities: tpl.responsibilities,
+      requiredResources: tpl.requiredResources,
+      requiredTools: tpl.requiredResources,
       procedureDetails: tpl.procedureDetails,
       safetyRisk: tpl.safetyRisk || prev.safetyRisk || '',
+      qualityChecks: tpl.qualityChecks || prev.qualityChecks || '',
+      documentationRecords: tpl.documentationRecords || prev.documentationRecords || '',
+      references: tpl.references || prev.references || '',
+      relatedDocuments: tpl.references || prev.relatedDocuments || '',
+      sopId: `SOP-${tpl.departmentId.toUpperCase().slice(0, 3)}-${Math.floor(100 + Math.random() * 900)}`,
+      version: prev.version || '1.0',
+      effectiveDate: prev.effectiveDate || new Date().toISOString().split('T')[0],
     }));
-    setStep(2);
+    // Open the actual customization form (Step 3)!
+    setStep(3);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -206,6 +217,7 @@ export const SOPWizard: React.FC = () => {
         user_id: user.id,
         title: formData.title,
         category: selectedCategory,
+        selected_topic: formData.selectedTopic || formData.title,
         theme: selectedTheme,
         structure: selectedStructure,
         target_page_count: targetPageLength === 'short' ? 2 : targetPageLength === 'detailed' ? 8 : 4,
@@ -443,19 +455,50 @@ export const SOPWizard: React.FC = () => {
         {/* STEP 3: DYNAMIC CATEGORY-SPECIFIC FORM */}
         {step === 3 && (
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6 animate-in fade-in duration-200">
+            {/* Active Topic Banner */}
+            {formData.selectedTopic && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-900 text-white rounded-2xl shadow-sm gap-3">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400">
+                      Active Department Topic
+                    </span>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-medium">
+                      {formData.department || activeCategoryMeta?.name}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-white tracking-tight">
+                    {formData.selectedTopic}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep(1);
+                    setStep1SubView('templates');
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition shrink-0 self-start sm:self-center"
+                >
+                  <span>Change Topic</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600">Step 3 of 4</span>
               <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-                SOP Details & Organizational Information
+                Customize SOP Parameters & Details
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Provide accurate details. The procedural generation engine will preserve all provided roles, tools, and constraints.
+                All fields are pre-filled with industry-standard procedures for this topic. Review and customize for your organization.
               </p>
             </div>
 
             {/* General Metadata */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   Organization / Company Name <span className="text-rose-500">*</span>
                 </label>
@@ -477,13 +520,13 @@ export const SOPWizard: React.FC = () => {
                   type="text"
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  placeholder="e.g. IT Operations, Manufacturing Plant A"
+                  placeholder="e.g. Quality Assurance, Warehouse Operations"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                   required
                 />
               </div>
 
-              <div className="sm:col-span-2">
+              <div className="sm:col-span-3">
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
                   SOP Document Title <span className="text-rose-500">*</span>
                 </label>
@@ -499,13 +542,26 @@ export const SOPWizard: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  SOP ID / Reference Number (Optional)
+                  SOP ID / Reference Number
                 </label>
                 <input
                   type="text"
                   value={formData.sopId || ''}
                   onChange={(e) => setFormData({ ...formData, sopId: e.target.value })}
-                  placeholder="e.g. SOP-EHS-204"
+                  placeholder="e.g. SOP-QA-101"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  Version
+                </label>
+                <input
+                  type="text"
+                  value={formData.version || '1.0'}
+                  onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+                  placeholder="e.g. 1.0"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-mono"
                 />
               </div>
@@ -523,7 +579,7 @@ export const SOPWizard: React.FC = () => {
               </div>
             </div>
 
-            {/* Core Purpose & Scope */}
+            {/* Core Purpose, Scope & Responsibilities */}
             <div className="space-y-4 border-t border-slate-100 pt-5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
@@ -533,7 +589,7 @@ export const SOPWizard: React.FC = () => {
                   rows={2}
                   value={formData.purpose}
                   onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-                  placeholder="What is the key goal of this SOP? (e.g. Prevent data loss during scheduled server migrations)"
+                  placeholder="What is the key goal of this SOP?"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                   required
                 />
@@ -547,47 +603,113 @@ export const SOPWizard: React.FC = () => {
                   rows={2}
                   value={formData.scope}
                   onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
-                  placeholder="Who and what facilities or departments are governed by this procedure?"
+                  placeholder="Who, which departments, sites, and processes are covered by this procedure?"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  3. Key Procedure / Process Details
+                  3. Roles & Responsibilities
                 </label>
                 <textarea
-                  rows={4}
+                  rows={2}
+                  value={formData.responsibilities || ''}
+                  onChange={(e) => setFormData({ ...formData, responsibilities: e.target.value })}
+                  placeholder="e.g. Quality Manager: Oversees auditing; Shift Lead: Enforces daily checklist execution"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  4. Required Resources, Equipment & Systems
+                </label>
+                <input
+                  type="text"
+                  value={formData.requiredResources || formData.requiredTools || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      requiredResources: e.target.value,
+                      requiredTools: e.target.value,
+                    })
+                  }
+                  placeholder="e.g. ERP Software, Calibrated Micrometer, Level 2 PPE, Cleanroom Chamber"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  5. Detailed Step-by-Step Procedure
+                </label>
+                <textarea
+                  rows={6}
                   value={formData.procedureDetails}
                   onChange={(e) => setFormData({ ...formData, procedureDetails: e.target.value })}
-                  placeholder="Outline the core steps or bullet points. The system will expand, structure, and number them properly."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-mono text-xs"
+                  placeholder="Detail step-by-step procedures. The generator formats, numbers, and aligns every step."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs font-mono leading-relaxed"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                    Required Equipment, Systems & Tools
+                    6. Quality Checks & Acceptance Criteria
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={formData.qualityChecks || ''}
+                    onChange={(e) => setFormData({ ...formData, qualityChecks: e.target.value })}
+                    placeholder="e.g. Tolerance ±0.05mm, Dual supervisor sign-off, Zero defect tolerance"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    7. Safety Controls & Risk Mitigation
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={formData.safetyRisk || ''}
+                    onChange={(e) => setFormData({ ...formData, safetyRisk: e.target.value })}
+                    placeholder="e.g. LOTO Protocol, PHI data encryption, Emergency shut-off valve proximity"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    8. Documentation & Record Retention
                   </label>
                   <input
                     type="text"
-                    value={formData.requiredTools || ''}
-                    onChange={(e) => setFormData({ ...formData, requiredTools: e.target.value })}
-                    placeholder="e.g. Forklift, Respirator N95, Kubernetes CLI"
+                    value={formData.documentationRecords || ''}
+                    onChange={(e) => setFormData({ ...formData, documentationRecords: e.target.value })}
+                    placeholder="e.g. Log sheet ARCH-04 retained for 7 years per regulatory standards"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                    Safety & Risk Considerations
+                    9. Regulatory References & Standards
                   </label>
                   <input
                     type="text"
-                    value={formData.safetyRisk || ''}
-                    onChange={(e) => setFormData({ ...formData, safetyRisk: e.target.value })}
-                    placeholder="e.g. Electrical hazard, PHI privacy violation risk"
+                    value={formData.references || formData.relatedDocuments || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        references: e.target.value,
+                        relatedDocuments: e.target.value,
+                      })
+                    }
+                    placeholder="e.g. ISO 9001:2015 Clause 8.5, OSHA 1910.120, FDA 21 CFR Part 11"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                   />
                 </div>

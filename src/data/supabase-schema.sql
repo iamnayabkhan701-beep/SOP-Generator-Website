@@ -55,6 +55,13 @@ INSERT INTO public.departments (id, name, description, is_regulated) VALUES
   ('legal', 'Legal & Compliance', 'Contract review, retention schedules, and statutory filings.', TRUE),
   ('remote-work', 'Remote Work Policy', 'Virtual work guidelines, endpoint encryption, and comms.', FALSE),
   ('procurement', 'Procurement & Purchasing', 'Strategic vendor due diligence, RFP bids, and contracts.', TRUE),
+  ('qa', 'Quality Assurance (QA)', 'Quality management system audits, corrective action plans (CAPA), and SOP life cycle control.', TRUE),
+  ('qc', 'Quality Control (QC)', 'Incoming material validation, analytical testing, line clearance, and non-conformance.', TRUE),
+  ('education', 'Education & Academic Operations', 'Student enrollment, curriculum change control, FERPA security, and examination integrity.', FALSE),
+  ('laboratory', 'Laboratory Operations', 'Specimen accessioning, analytical instrument calibration, chemical hygiene, and biohazard disposal.', TRUE),
+  ('maintenance', 'Maintenance & Reliability', 'Preventive maintenance scheduling, Total Productive Maintenance (TPM), and work order tracking.', TRUE),
+  ('security', 'Physical & Asset Security', 'Access control badge management, CCTV operations, alarm response, and key custody.', TRUE),
+  ('rd', 'Research & Development (R&D)', 'Stage-gate development, laboratory notebook verification, intellectual property, and prototype safety.', FALSE),
   ('custom', 'Custom Department', 'Bespoke operational workflow procedures.', FALSE)
 ON CONFLICT (id) DO NOTHING;
 
@@ -65,6 +72,7 @@ CREATE TABLE IF NOT EXISTS public.sops (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
+  selected_topic TEXT,
   category TEXT NOT NULL REFERENCES public.departments(id),
   theme TEXT NOT NULL DEFAULT 'corporate-black',
   structure TEXT NOT NULL DEFAULT 'standard',

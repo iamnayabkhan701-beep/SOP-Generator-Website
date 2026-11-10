@@ -1,27 +1,37 @@
 export type SOPCategory =
   | 'hr'
+  | 'finance'
+  | 'administration'
   | 'it'
+  | 'healthcare'
+  | 'manufacturing'
+  | 'qa'
+  | 'qc'
+  | 'procurement'
+  | 'supply-chain'
+  | 'warehouse'
+  | 'customer-service'
+  | 'marketing'
+  | 'sales'
+  | 'operations'
+  | 'education'
+  | 'construction'
+  | 'food-safety'
+  | 'laboratory'
+  | 'maintenance'
+  | 'security'
+  | 'rd'
+  // Legacy / aliases
   | 'office'
   | 'safety'
-  | 'manufacturing'
   | 'quality'
-  | 'healthcare'
-  | 'finance'
-  | 'customer-service'
-  | 'operations'
-  | 'warehouse'
-  | 'supply-chain'
-  | 'logistics'
-  | 'construction'
-  | 'retail'
   | 'food-service'
   | 'cybersecurity'
   | 'environmental'
-  | 'sales'
-  | 'marketing'
   | 'legal'
   | 'remote-work'
-  | 'procurement'
+  | 'logistics'
+  | 'retail'
   | 'custom';
 
 export type SOPTheme =
@@ -64,14 +74,19 @@ export interface SOPFormData {
   // Common Fields
   companyName: string;
   department: string;
+  selectedTopic?: string;
   title: string;
   sopId?: string;
   purpose: string;
   scope: string;
   responsibilities: string;
   procedureDetails: string;
+  requiredResources?: string;
   requiredTools?: string;
   safetyRisk?: string;
+  qualityChecks?: string;
+  documentationRecords?: string;
+  references?: string;
   relatedDocuments?: string;
   preparedBy: string;
   reviewedBy: string;
@@ -244,6 +259,7 @@ export interface SOPDocument {
   user_id: string;
   title: string;
   category: SOPCategory;
+  selected_topic?: string;
   theme: SOPTheme;
   structure: SOPStructure;
   target_page_count: number;
@@ -280,166 +296,193 @@ export interface CategoryMetadata {
 export const CATEGORIES: CategoryMetadata[] = [
   {
     id: 'hr',
-    name: 'Human Resources',
-    description: 'Onboarding, performance reviews, employee transitions, and internal personnel policies.',
+    name: 'Human Resources (HR)',
+    description: 'Recruitment, onboarding, attendance, performance management, and employee grievance handling.',
     iconName: 'Users'
   },
   {
+    id: 'finance',
+    name: 'Finance & Accounting',
+    description: 'Budget management, accounts payable, accounts receivable, bank reconciliation, and financial reporting.',
+    iconName: 'Coins'
+  },
+  {
+    id: 'administration',
+    name: 'Administration',
+    description: 'Access control, office supplies, mail handling, facility maintenance, and document archival.',
+    iconName: 'Building2'
+  },
+  {
     id: 'it',
-    name: 'Information Technology',
-    description: 'System administration, access provisioning, deployments, incident response, and rollbacks.',
+    name: 'Information Technology (IT)',
+    description: 'User access management, data backups, cybersecurity incidents, IT troubleshooting, and system maintenance.',
     iconName: 'Server'
   },
   {
-    id: 'safety',
-    name: 'Workplace Safety & EHS',
-    description: 'Hazard identification, PPE standards, emergency responses, and OSHA/EHS best practices.',
-    iconName: 'ShieldAlert',
+    id: 'healthcare',
+    name: 'Healthcare',
+    description: 'Patient registration, patient assessment, infection control, medication management, and emergency response.',
+    iconName: 'Activity',
     isRegulatedOrHighRisk: true,
-    disclaimer: 'Workplace safety procedures must be verified by a certified safety officer or EHS professional prior to deployment.'
+    disclaimer: 'Healthcare procedures require clinical oversight and compliance with health authority regulations.'
   },
   {
     id: 'manufacturing',
-    name: 'Manufacturing & Operations',
-    description: 'Assembly line instructions, machinery operation, material handling, and equipment calibration.',
+    name: 'Manufacturing',
+    description: 'Raw material inspection, machine operation, production control, quality inspection, and equipment maintenance.',
     iconName: 'Cpu',
     isRegulatedOrHighRisk: true,
     disclaimer: 'Manufacturing procedures involve physical equipment risks and must be verified by plant engineering.'
   },
   {
-    id: 'quality',
-    name: 'Quality Control (QA/QC)',
-    description: 'Batch testing, inspection checklists, tolerance verification, and non-conformance logging.',
-    iconName: 'CheckCircle2',
-    isRegulatedOrHighRisk: true,
-    disclaimer: 'Quality control procedures must be aligned with your official ISO or organizational quality manual.'
-  },
-  {
-    id: 'healthcare',
-    name: 'Healthcare Administration',
-    description: 'Patient check-in, HIPAA record handling, clinic scheduling, and administrative billing workflows.',
-    iconName: 'Activity',
-    isRegulatedOrHighRisk: true,
-    disclaimer: 'Administrative only. This tool does NOT generate clinical, diagnostic, or medical protocols.'
-  },
-  {
-    id: 'finance',
-    name: 'Finance & Accounting',
-    description: 'Invoicing, petty cash, purchase authorizations, month-end close, and internal audit trails.',
-    iconName: 'Coins'
-  },
-  {
-    id: 'customer-service',
-    name: 'Customer Service & Support',
-    description: 'Ticket resolution, customer escalation matrix, refund workflows, and SLA compliance.',
-    iconName: 'Headphones'
-  },
-  {
-    id: 'office',
-    name: 'Office Administration',
-    description: 'Daily opening/closing, mail management, visitor logging, and facilities upkeep.',
-    iconName: 'Building2'
-  },
-  {
-    id: 'operations',
-    name: 'General Business Operations',
-    description: 'Cross-functional operations, supplier management, logistics, and standard daily routines.',
-    iconName: 'Layers'
-  },
-  {
-    id: 'warehouse',
-    name: 'Warehouse Management',
-    description: 'Receiving, storage zones, inventory control, pick-pack-ship, and cycle counting procedures.',
-    iconName: 'Warehouse',
-    isRegulatedOrHighRisk: true,
-    disclaimer: 'Warehouse safety procedures (forklift, racking, hazardous materials) must be verified by a qualified safety officer.'
-  },
-  {
-    id: 'supply-chain',
-    name: 'Supply Chain Management',
-    description: 'Supplier qualification, purchase orders, demand planning, and procurement workflows.',
-    iconName: 'GitBranch'
-  },
-  {
-    id: 'logistics',
-    name: 'Logistics & Distribution',
-    description: 'Outbound shipments, carrier selection, delivery scheduling, and last-mile tracking.',
-    iconName: 'Truck'
-  },
-  {
-    id: 'construction',
-    name: 'Construction & Site Safety',
-    description: 'Site permits, equipment inspection, scaffolding standards, and fall protection procedures.',
-    iconName: 'HardHat',
-    isRegulatedOrHighRisk: true,
-    disclaimer: 'Construction safety SOPs must comply with OSHA 29 CFR 1926 and be verified by a certified site safety officer.'
-  },
-  {
-    id: 'retail',
-    name: 'Retail Operations',
-    description: 'Store opening/closing, cash handling, inventory counting, and loss prevention procedures.',
-    iconName: 'ShoppingBag'
-  },
-  {
-    id: 'food-service',
-    name: 'Food Service & Restaurant',
-    description: 'Food safety standards, allergen management, HACCP plans, and kitchen cleaning protocols.',
-    iconName: 'ChefHat',
-    isRegulatedOrHighRisk: true,
-    disclaimer: 'Food safety SOPs must comply with FDA Food Code and local health department regulations.'
-  },
-  {
-    id: 'cybersecurity',
-    name: 'Cybersecurity & Incident Response',
-    description: 'Incident triage, containment, forensics, breach notification, and security hardening.',
+    id: 'qa',
+    name: 'Quality Assurance (QA)',
+    description: 'QMS documentation control, internal audits, CAPA management, management review, and change control.',
     iconName: 'ShieldCheck',
     isRegulatedOrHighRisk: true,
-    disclaimer: 'Cybersecurity incident response plans should be reviewed by a certified CISO or security professional.'
+    disclaimer: 'Quality assurance procedures must align with ISO 9001 and organizational quality manuals.'
   },
   {
-    id: 'environmental',
-    name: 'Environmental Compliance',
-    description: 'Waste management, emissions monitoring, sustainability reporting, and EPA compliance.',
-    iconName: 'Leaf',
+    id: 'qc',
+    name: 'Quality Control (QC)',
+    description: 'In-process quality check, finished product release, equipment calibration, non-conformance, and lab tests.',
+    iconName: 'CheckCircle2',
     isRegulatedOrHighRisk: true,
-    disclaimer: 'Environmental compliance SOPs must be verified against applicable EPA, ISO 14001, and local regulations.'
-  },
-  {
-    id: 'sales',
-    name: 'Sales Process & CRM',
-    description: 'Lead qualification, pipeline management, proposal creation, and deal closing workflows.',
-    iconName: 'TrendingUp'
-  },
-  {
-    id: 'marketing',
-    name: 'Marketing Operations',
-    description: 'Campaign planning, content approval, social media management, and analytics reporting.',
-    iconName: 'Megaphone'
-  },
-  {
-    id: 'legal',
-    name: 'Legal & Compliance',
-    description: 'Contract review, document retention, regulatory filings, and compliance audit procedures.',
-    iconName: 'Scale',
-    isRegulatedOrHighRisk: true,
-    disclaimer: 'Legal compliance SOPs must be reviewed by qualified legal counsel before implementation.'
-  },
-  {
-    id: 'remote-work',
-    name: 'Remote Work Policy',
-    description: 'Communication protocols, home office security, performance tracking, and collaboration tools.',
-    iconName: 'Laptop'
+    disclaimer: 'QC procedures must adhere to certified laboratory tolerance and sampling specifications.'
   },
   {
     id: 'procurement',
-    name: 'Procurement & Purchasing',
-    description: 'Vendor selection, RFP process, purchase approval workflows, and contract management.',
+    name: 'Procurement',
+    description: 'Vendor prequalification, purchase requisitions, competitive bidding, supplier scorecards, and contracts.',
     iconName: 'ClipboardList'
+  },
+  {
+    id: 'supply-chain',
+    name: 'Supply Chain',
+    description: 'Demand forecasting, supplier capacity, freight and customs clearance, stock transfers, and contingency plans.',
+    iconName: 'GitBranch'
+  },
+  {
+    id: 'warehouse',
+    name: 'Warehouse',
+    description: 'Goods receiving, inventory put-away, order picking and dispatch, cycle counts, and hazmat storage.',
+    iconName: 'Warehouse',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Warehouse procedures must comply with OSHA forklift and material handling safety standards.'
+  },
+  {
+    id: 'customer-service',
+    name: 'Customer Service',
+    description: 'Ticket resolution, SLA tracking, customer complaints, returns and refunds, and CSAT metric reviews.',
+    iconName: 'Headphones'
+  },
+  {
+    id: 'marketing',
+    name: 'Marketing',
+    description: 'Brand asset guidelines, campaign planning, social media moderation, lead generation, and analytics.',
+    iconName: 'Megaphone'
+  },
+  {
+    id: 'sales',
+    name: 'Sales',
+    description: 'Lead qualification (BANT), client discovery, pipeline management, contract negotiation, and customer handover.',
+    iconName: 'TrendingUp'
+  },
+  {
+    id: 'operations',
+    name: 'Operations',
+    description: 'Shift handovers, standard work execution, workload balancing, operational KPIs, and continuity drills.',
+    iconName: 'Layers'
+  },
+  {
+    id: 'education',
+    name: 'Education',
+    description: 'Curriculum development, student admissions, examination administration, faculty review, and student advising.',
+    iconName: 'GraduationCap'
+  },
+  {
+    id: 'construction',
+    name: 'Construction',
+    description: 'Site safety briefings, working at heights, scaffolding inspection, hot work permits, and concrete curing.',
+    iconName: 'HardHat',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Construction SOPs must comply with OSHA 1926 standards and local building authority permits.'
+  },
+  {
+    id: 'food-safety',
+    name: 'Food Safety',
+    description: 'HACCP critical control points, surface sanitation, allergen control, cold chain logs, and food recalls.',
+    iconName: 'ChefHat',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Food safety SOPs must comply with FDA Food Code, ISO 22000, and local health department standards.'
+  },
+  {
+    id: 'laboratory',
+    name: 'Laboratory',
+    description: 'Reagent preparation, balance calibration, biological specimen handling, glassware autoclaving, and waste disposal.',
+    iconName: 'FlaskConical',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Laboratory procedures must adhere to GLP (Good Laboratory Practice) and biosafety protocols.'
+  },
+  {
+    id: 'maintenance',
+    name: 'Maintenance',
+    description: 'Preventive maintenance work orders, emergency breakdown repair, lubrication routine, and spare parts management.',
+    iconName: 'Wrench'
+  },
+  {
+    id: 'security',
+    name: 'Security',
+    description: 'Perimeter access control, CCTV surveillance, security patrols, keycard deactivation, and breach response.',
+    iconName: 'ShieldAlert',
+    isRegulatedOrHighRisk: true,
+    disclaimer: 'Security protocols must coordinate with local law enforcement and facility security directives.'
+  },
+  {
+    id: 'rd',
+    name: 'Research & Development (R&D)',
+    description: 'Concept feasibility, prototype testing, patent disclosure, material stress testing, and pilot handover.',
+    iconName: 'Microscope'
+  },
+  // Legacy / backward-compatible aliases:
+  {
+    id: 'office',
+    name: 'Office Administration (Legacy)',
+    description: 'General office procedures.',
+    iconName: 'Building2'
+  },
+  {
+    id: 'safety',
+    name: 'Workplace Safety & EHS (Legacy)',
+    description: 'OSHA / EHS safety guidelines.',
+    iconName: 'ShieldAlert',
+    isRegulatedOrHighRisk: true
+  },
+  {
+    id: 'quality',
+    name: 'Quality Control QA/QC (Legacy)',
+    description: 'Batch inspection and testing.',
+    iconName: 'CheckCircle2',
+    isRegulatedOrHighRisk: true
+  },
+  {
+    id: 'food-service',
+    name: 'Food Service (Legacy)',
+    description: 'Restaurant and kitchen routines.',
+    iconName: 'ChefHat',
+    isRegulatedOrHighRisk: true
+  },
+  {
+    id: 'cybersecurity',
+    name: 'Cybersecurity (Legacy)',
+    description: 'Incident triage and response.',
+    iconName: 'ShieldCheck',
+    isRegulatedOrHighRisk: true
   },
   {
     id: 'custom',
     name: 'Custom SOP',
-    description: 'Design a bespoke standard procedure for any specialized organization workflow.',
+    description: 'Design a bespoke procedure for any specialized organization workflow.',
     iconName: 'FileSpreadsheet'
   }
 ];

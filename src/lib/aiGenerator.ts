@@ -100,6 +100,49 @@ export async function generateSOP(options: GenerateOptions): Promise<SOPGenerate
 }
 
 function buildFlowchartSteps(category: SOPCategory, formData: SOPFormData): FlowchartStep[] {
+  const topicLower = (formData.selectedTopic || formData.title || '').toLowerCase();
+
+  // Dynamic topic-specific flowchart generation
+  if (topicLower.includes('recruit') || topicLower.includes('hiring')) {
+    return [
+      { id: 'flow-1', stepNumber: 1, label: 'Requisition & Job Posting', description: 'Authorize manpower budget and publish job opening.', role: 'Hiring Manager', shape: 'start' },
+      { id: 'flow-2', stepNumber: 2, label: 'Resume Screening & Shortlisting', description: 'Filter candidates using standardized rubrics.', role: 'Recruiter', shape: 'process' },
+      { id: 'flow-3', stepNumber: 3, label: 'Structured Competency Interview', description: 'Administer panel interview and technical scoring.', role: 'Interview Panel', shape: 'process' },
+      { id: 'flow-4', stepNumber: 4, label: 'Background & Degree Vetting', description: 'Verify prior employment and legal credentials.', role: 'HR Compliance', shape: 'decision' },
+      { id: 'flow-5', stepNumber: 5, label: 'Formal Offer Letter Issuance', description: 'Issue employment contract and confirm start date.', role: 'HR Director', shape: 'end' },
+    ];
+  }
+
+  if (topicLower.includes('onboard') || topicLower.includes('orientation')) {
+    return [
+      { id: 'flow-1', stepNumber: 1, label: 'Pre-Boarding Setup', description: 'Provision hardware, email, and ERP accounts.', role: 'IT / HR Ops', shape: 'start' },
+      { id: 'flow-2', stepNumber: 2, label: 'Day-1 Welcoming & Documentation', description: 'Complete tax, direct deposit, and handbook signoffs.', role: 'People Partner', shape: 'process' },
+      { id: 'flow-3', stepNumber: 3, label: 'Mentor Shadowing & Training', description: 'Pair with peer mentor for operational shadowing.', role: 'Assigned Buddy', shape: 'process' },
+      { id: 'flow-4', stepNumber: 4, label: '30-Day Checkpoint Review', description: 'Evaluate tool access and initial deliverables.', role: 'Line Manager', shape: 'decision' },
+      { id: 'flow-5', stepNumber: 5, label: '90-Day Probation Confirmation', description: 'Formal appraisal and employment confirmation.', role: 'Department Head', shape: 'end' },
+    ];
+  }
+
+  if (topicLower.includes('payable') || topicLower.includes('invoice')) {
+    return [
+      { id: 'flow-1', stepNumber: 1, label: 'Centralized Invoice Ingestion', description: 'Log vendor invoice and assign voucher ID.', role: 'AP Clerk', shape: 'start' },
+      { id: 'flow-2', stepNumber: 2, label: '3-Way Matching Verification', description: 'Match invoice against approved PO and GRN receipt.', role: 'ERP System', shape: 'process' },
+      { id: 'flow-3', stepNumber: 3, label: 'Tolerance & Variance Check', description: 'Verify price and quantity match within ±0.5%.', role: 'AP Supervisor', shape: 'decision' },
+      { id: 'flow-4', stepNumber: 4, label: 'Statutory Tax Withholding', description: 'Deduct income and sales withholding taxes.', role: 'Tax Accountant', shape: 'process' },
+      { id: 'flow-5', stepNumber: 5, label: 'Dual-Token Banking Disbursement', description: 'Release wire/ACH payment on corporate portal.', role: 'Finance Director / CFO', shape: 'end' },
+    ];
+  }
+
+  if (topicLower.includes('patient') && topicLower.includes('registration')) {
+    return [
+      { id: 'flow-1', stepNumber: 1, label: 'Patient Reception Intake', description: 'Collect government photo ID and insurance card.', role: 'Intake Clerk', shape: 'start' },
+      { id: 'flow-2', stepNumber: 2, label: 'Identity Verification (2 Identifiers)', description: 'Confirm full legal name and date of birth in MPI.', role: 'Patient Access Rep', shape: 'process' },
+      { id: 'flow-3', stepNumber: 3, label: 'Insurance Pre-Authorization', description: 'Verify real-time eligibility and co-payment.', role: 'Clearinghouse Portal', shape: 'decision' },
+      { id: 'flow-4', stepNumber: 4, label: 'HIPAA & Consent Signoffs', description: 'Patient signs digital consent and privacy notices.', role: 'Admitting Officer', shape: 'process' },
+      { id: 'flow-5', stepNumber: 5, label: 'Barcode Wristband Issuance', description: 'Affix clinical wristband and admit to triage.', role: 'Triage Nurse', shape: 'end' },
+    ];
+  }
+
   if (category === 'warehouse') {
     return [
       { id: 'flow-1', stepNumber: 1, label: 'Inbound Dock Arrival', description: 'Inspect manifest and pallet bill of lading.', role: 'Receiving Clerk', shape: 'start' },
@@ -112,8 +155,8 @@ function buildFlowchartSteps(category: SOPCategory, formData: SOPFormData): Flow
 
   if (category === 'manufacturing') {
     return [
-      { id: 'flow-1', stepNumber: 1, label: 'Machine Pre-Flight', description: 'Calibrate sensors, clean tooling, and verify raw stock.', role: 'Line Operator', shape: 'start' },
-      { id: 'flow-2', stepNumber: 2, label: 'Production Run Initiation', description: 'Engage automated assembly line per recipe parameters.', role: 'Machinist Lead', shape: 'process' },
+      { id: 'flow-1', stepNumber: 1, label: 'Machine Pre-Flight & Setup', description: 'Calibrate sensors, clean tooling, and verify stock.', role: 'Line Operator', shape: 'start' },
+      { id: 'flow-2', stepNumber: 2, label: 'Production Run Initiation', description: 'Engage automated assembly per recipe parameters.', role: 'Machinist Lead', shape: 'process' },
       { id: 'flow-3', stepNumber: 3, label: 'In-Process QA Gate', description: 'Tolerance sampling and statistical process check.', role: 'Quality Inspector', shape: 'decision' },
       { id: 'flow-4', stepNumber: 4, label: 'Defect Quota Audit', description: 'Isolate off-spec units and record batch non-conformance.', role: 'QA Lead', shape: 'process' },
       { id: 'flow-5', stepNumber: 5, label: 'Final Packaging & Tagging', description: 'Affix lot serials and transfer to finished goods.', role: 'Shift Supervisor', shape: 'end' },
@@ -459,20 +502,58 @@ function buildStructuredSections(
     ],
   });
 
-  // 8. Documentation & Record Retention
+  // 8. Quality Checks & Verification
+  if (formData.qualityChecks) {
+    sections.push({
+      id: 'sec-quality-checks',
+      title: '8. Quality Checks & Verification Checkpoints',
+      type: 'checklist',
+      content: 'Mandatory quality criteria and inspection milestones that must be satisfied during execution:',
+      items: formData.qualityChecks.split('\n').filter(Boolean),
+    });
+  } else {
+    sections.push({
+      id: 'sec-quality-checks',
+      title: '8. Quality Checks & Acceptance Criteria',
+      type: 'checklist',
+      content: 'Standard acceptance criteria required for operational sign-off:',
+      items: [
+        'All input materials and credentials verified prior to execution.',
+        'Core operational parameters verified against specified tolerances.',
+        'Zero critical non-conformances or deviations recorded during run.',
+        'Peer or supervisor verification signature obtained upon completion.',
+      ],
+    });
+  }
+
+  // 9. Documentation & Records
+  const docContent = formData.documentationRecords || 
+    'All operational records, logs, and verification sign-offs generated pursuant to this procedure must be retained for a minimum of 3 years in accordance with organizational compliance policy. Audits may be performed at periodic intervals by internal QA or regulatory oversight bodies.';
+
   sections.push({
     id: 'sec-records',
-    title: '8. Records, Auditing & Document History',
+    title: '9. Documentation, Records & Audit Logs',
     type: 'text',
-    content: `All operational records, logs, and verification sign-offs generated pursuant to this procedure must be retained for a minimum of 3 years in accordance with organizational compliance policy. Audits may be performed at periodic intervals by internal QA or regulatory oversight bodies.`,
+    content: docContent,
   });
 
-  // 9. Sign-off and Authorization
+  // 10. References & Standards
+  const refContent = formData.references || formData.relatedDocuments ||
+    'ISO 9001:2015 Quality Management Systems; Relevant statutory OSHA and institutional compliance standards.';
+
+  sections.push({
+    id: 'sec-references',
+    title: '10. Regulatory References & Compliance Standards',
+    type: 'text',
+    content: refContent,
+  });
+
+  // 11. Formal Approvals & Sign-off
   sections.push({
     id: 'sec-signoff',
-    title: '9. Formal Approvals & Authorization',
+    title: '11. Formal Approvals & Sign-off Authorization',
     type: 'text',
-    content: `By signing below, the author, reviewer, and approver verify that this procedure has been validated and reflects current operational standards:`,
+    content: `Prepared By: ${formData.preparedBy || 'Designated Author'} | Reviewed By: ${formData.reviewedBy || 'Technical Reviewer'} | Approved By: ${formData.approvedBy || 'Department Head'} | Effective Date: ${formData.effectiveDate || new Date().toISOString().split('T')[0]} | Version: v${formData.version || '1.0'}`,
   });
 
   return sections;

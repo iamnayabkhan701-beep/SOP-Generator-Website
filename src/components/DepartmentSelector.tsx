@@ -26,6 +26,10 @@ import {
   CheckCircle2,
   Search,
   ArrowRight,
+  GraduationCap,
+  FlaskConical,
+  Wrench,
+  Microscope,
   ShieldAlert as AlertIcon
 } from 'lucide-react';
 import { CATEGORIES, type SOPCategory, type CategoryMetadata } from '../types/sop';
@@ -67,11 +71,18 @@ export const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
       case 'Laptop': return <Laptop className="w-5 h-5" />;
       case 'ClipboardList': return <ClipboardList className="w-5 h-5" />;
       case 'CheckCircle2': return <CheckCircle2 className="w-5 h-5" />;
+      case 'GraduationCap': return <GraduationCap className="w-5 h-5" />;
+      case 'FlaskConical': return <FlaskConical className="w-5 h-5" />;
+      case 'Wrench': return <Wrench className="w-5 h-5" />;
+      case 'Microscope': return <Microscope className="w-5 h-5" />;
       default: return <FileSpreadsheet className="w-5 h-5" />;
     }
   };
 
-  const filtered = CATEGORIES.filter(c =>
+  // Only display the 22 primary departments (exclude legacy aliases from grid)
+  const primaryDepartments = CATEGORIES.filter(c => !c.name.includes('(Legacy)') && c.id !== 'custom');
+
+  const filtered = primaryDepartments.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.description.toLowerCase().includes(search.toLowerCase())
   );
