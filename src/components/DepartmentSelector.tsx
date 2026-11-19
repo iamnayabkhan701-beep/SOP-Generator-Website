@@ -95,7 +95,7 @@ export const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
             Step 1: Select Operational Department
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Choose your organization domain to unlock industry-specific SOP templates and regulatory standards.
+            Choose your organization department to automatically synthesize its complete, company-tailored SOP suite.
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
                     )}
                     {templates.length > 0 && (
                       <span className="text-[10px] font-bold bg-brand-50 text-brand-700 border border-brand-200/60 px-2 py-0.5 rounded-md">
-                        {templates.length} {templates.length === 1 ? 'Template' : 'Templates'}
+                        {templates.length} SOPs Ready
                       </span>
                     )}
                   </div>
@@ -162,7 +162,7 @@ export const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-brand-600 font-semibold group-hover:translate-x-0.5 transition-transform">
-                <span>View Templates</span>
+                <span>Configure & Auto-Generate Suite</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </div>
             </button>

@@ -8,6 +8,7 @@ import { AuthPages } from './pages/AuthPages';
 import { Dashboard } from './pages/Dashboard';
 import { SOPWizard } from './pages/SOPWizard';
 import { SOPPreview } from './pages/SOPPreview';
+import { SOPSuiteViewer } from './pages/SOPSuiteViewer';
 import { Settings } from './pages/Settings';
 import { AdminPanel } from './pages/AdminPanel';
 
@@ -81,6 +82,14 @@ export const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <SOPPreview />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/suite/:suiteId"
+            element={
+              <ProtectedRoute>
+                <SOPSuiteViewer />
               </ProtectedRoute>
             }
           />

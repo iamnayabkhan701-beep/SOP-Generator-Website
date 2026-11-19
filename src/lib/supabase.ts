@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { SOPDocument, SOPGeneratedContent, SOPRevision, SOPStatus } from '../types/sop';
+import type { SOPDocument, SOPGeneratedContent, SOPRevision, SOPStatus, SOPSuite } from '../types/sop';
 
 // Check environment variables first, then check localStorage overrides
 const envUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -286,5 +286,114 @@ export async function getPDFDownloadUrl(storagePath: string): Promise<string | n
   }
 
   return data.signedUrl;
+}
+
+// ----------------------------------------------------------------------
+// Department SOP Suite Operations
+// ----------------------------------------------------------------------
+
+const LOCAL_STORAGE_SUITES_KEY = 'sop_local_suites';
+
+const getLocalSuites = (): SOPSuite[] => {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_SUITES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error('Failed to read local suites', e);
+    return [];
+  }
+};
+
+const saveLocalSuites = (suites: SOPSuite[]) => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_SUITES_KEY, JSON.stringify(suites));
+  } catch (e) {
+    console.error('Failed to save local suites', e);
+  }
+};
+
+export async function saveSOPSuite(suite: SOPSuite): Promise<SOPSuite> {
+  // Save local cache
+  const suites = getLocalSuites();
+  saveLocalSuites([suite, ...suites.filter((s) => s.id !== suite.id)]);
+
+  // Also save all documents within the suite
+  if (suite.documents && suite.documents.length > 0) {
+    const localDocs = getLocalDocs();
+    const docIds = new Set(suite.documents.map((d) => d.id));
+    const filtered = localDocs.filter((d) => !docIds.has(d.id));
+    saveLocalDocs([...suite.documents, ...filtered]);
+  }
+
+  return suite;
+}
+
+export async function fetchUserSuites(userId: string): Promise<SOPSuite[]> {
+  const suites = getLocalSuites();
+  return suites
+    .filter((s) => s.user_id === userId)
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+}
+
+export async function fetchSuiteById(suiteId: string, userId?: string): Promise<SOPSuite | null> {
+  const suites = getLocalSuites();
+  const found = suites.find((s) => s.id === suiteId);
+  if (!found) {
+    // If not found directly, check if documents exist with this suite_id
+    const docs = getLocalDocs().filter((d) => d.suite_id === suiteId);
+    if (docs.length > 0) {
+      const first = docs[0];
+      return {
+        id: suiteId,
+        user_id: first.user_id,
+        departmentId: first.category,
+        departmentName: first.form_data?.department || first.category,
+        companyName: first.form_data?.companyName || 'Enterprise',
+        title: first.suite_title || `${first.category.toUpperCase()} SOP Suite`,
+        totalSOPs: docs.length,
+        documents: docs,
+        created_at: first.created_at,
+        updated_at: first.updated_at,
+        status: 'ready',
+      };
+    }
+    return null;
+  }
+  if (userId && found.user_id !== userId) return null;
+  return found;
+}
+
+export async function createMultipleSOPDocuments(
+  docs: Omit<SOPDocument, 'created_at' | 'updated_at'>[]
+): Promise<SOPDocument[]> {
+  const now = new Date().toISOString();
+  const createdList: SOPDocument[] = docs.map((doc) => ({
+    ...doc,
+    created_at: now,
+    updated_at: now,
+  }));
+
+  const local = getLocalDocs();
+  const createdIds = new Set(createdList.map((d) => d.id));
+  saveLocalDocs([...createdList, ...local.filter((d) => !createdIds.has(d.id))]);
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('sop_documents')
+        .insert(createdList)
+        .select();
+
+      if (error) {
+        console.warn('Supabase batch insert warning (saved locally):', error);
+      } else if (data) {
+        return data as SOPDocument[];
+      }
+    } catch (e) {
+      console.warn('Supabase batch insert error (saved locally):', e);
+    }
+  }
+
+  return createdList;
 }
 

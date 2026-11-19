@@ -238,6 +238,14 @@ export const SOPPreview: React.FC = () => {
               <ArrowLeft className="w-4 h-4" />
               <span>Dashboard</span>
             </button>
+            {doc.suite_id && (
+              <Link
+                to={`/suite/${doc.suite_id}`}
+                className="p-2 rounded-xl bg-brand-50 border border-brand-200 text-brand-700 hover:bg-brand-100 text-xs font-semibold flex items-center gap-1"
+              >
+                <span>Full Suite</span>
+              </Link>
+            )}
             <div className="truncate">
               <span className="text-xs font-extrabold text-slate-900 block truncate max-w-xs sm:max-w-sm">
                 {content.documentTitle}

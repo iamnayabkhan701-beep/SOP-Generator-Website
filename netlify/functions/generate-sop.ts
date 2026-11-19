@@ -38,26 +38,31 @@ Purpose: ${formData.purpose || ''}
 Scope: ${formData.scope || ''}
 Responsibilities: ${formData.responsibilities || ''}
 Procedure: ${formData.procedureDetails || ''}
+Tools & Systems: ${formData.requiredTools || ''}
+Safety & Risk: ${formData.safetyRisk || ''}
+Quality Checks: ${formData.qualityChecks || ''}
+Documentation: ${formData.documentationRecords || ''}
+Standards & References: ${formData.references || ''}
 
 Output ONLY valid JSON matching this exact structure:
 {
   "documentTitle": "${formData.title}",
   "organization": "${formData.companyName || 'Enterprise'}",
   "metadata": {
-    "sopId": "SOP-${category.toUpperCase().slice(0, 3)}-101",
+    "sopId": "${formData.sopId || `SOP-${category.toUpperCase().slice(0, 3)}-101`}",
     "version": "${formData.version || '1.0'}",
     "effectiveDate": "${formData.effectiveDate || new Date().toISOString().split('T')[0]}",
     "department": "${formData.department || 'Operations'}",
-    "preparedBy": "${formData.preparedBy || '[Insert Name]'}",
-    "reviewedBy": "${formData.reviewedBy || '[Insert Name]'}",
-    "approvedBy": "${formData.approvedBy || '[Insert Name]'}"
+    "preparedBy": "${formData.preparedBy || 'Operations Lead'}",
+    "reviewedBy": "${formData.reviewedBy || 'Quality Manager'}",
+    "approvedBy": "${formData.approvedBy || 'Vice President of Operations'}"
   },
   "executiveSummary": "...",
-  "disclaimer": "...",
+  "disclaimer": "OFFICIAL STANDARD OPERATING PROCEDURE.",
   "sections": [
     {
       "id": "sec-1",
-      "title": "1. Purpose",
+      "title": "1. Purpose & Objectives",
       "type": "text",
       "content": "..."
     }
@@ -82,6 +87,40 @@ Output ONLY valid JSON matching this exact structure:
               statusCode: 200,
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(parsed),
+            };
+          }
+        }
+      } else if (provider === 'openai') {
+        const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: model || 'gpt-4o-mini',
+            response_format: { type: 'json_object' },
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an expert enterprise SOP documentation architect. Output only structured JSON matching the requested SOP schema.',
+              },
+              {
+                role: 'user',
+                content: `Generate a comprehensive SOP for ${formData.title} in department ${category} for ${formData.companyName}. Procedure details: ${formData.procedureDetails}. Required tools: ${formData.requiredTools}. Safety: ${formData.safetyRisk}. Quality: ${formData.qualityChecks}.`,
+              },
+            ],
+          }),
+        });
+
+        if (openaiRes.ok) {
+          const openaiData = await openaiRes.json();
+          const content = openaiData.choices?.[0]?.message?.content;
+          if (content) {
+            return {
+              statusCode: 200,
+              headers: { 'Content-Type': 'application/json' },
+              body: content,
             };
           }
         }

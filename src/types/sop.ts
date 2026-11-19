@@ -272,9 +272,45 @@ export interface SOPDocument {
   actual_page_count?: number | null;
   pdf_storage_path?: string | null;
   version: number;
+  suite_id?: string;
+  suite_title?: string;
+  sequence_number?: number;
+  total_in_suite?: number;
   created_at: string;
   updated_at: string;
   archived_at?: string | null;
+}
+
+export interface CompanyInfoFormData {
+  companyName: string;
+  industry: string;
+  country: string;
+  city: string;
+  companySize: string;
+  departmentName: string;
+  productsOrServices: string;
+  mainOperationalActivities: string;
+  applicableStandards: string[];
+  preparedBy: string;
+  reviewedBy: string;
+  approvedBy: string;
+  effectiveDate: string;
+  version: string;
+  departmentDetails: Record<string, string>;
+}
+
+export interface SOPSuite {
+  id: string;
+  user_id: string;
+  departmentId: SOPCategory;
+  departmentName: string;
+  companyName: string;
+  title: string;
+  totalSOPs: number;
+  documents: SOPDocument[];
+  created_at: string;
+  updated_at: string;
+  status: SOPStatus;
 }
 
 export interface SOPRevision {
