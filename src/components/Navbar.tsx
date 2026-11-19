@@ -49,6 +49,16 @@ export const Navbar: React.FC = () => {
                     Dashboard
                   </Link>
                   <Link
+                    to="/templates"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-medium transition ${
+                      isActive('/templates')
+                        ? 'bg-brand-50 text-brand-700 font-semibold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    Templates
+                  </Link>
+                  <Link
                     to="/documents"
                     className={`px-3.5 py-2 rounded-xl text-sm font-medium transition flex items-center gap-1.5 ${
                       isActive('/documents')
@@ -69,9 +79,16 @@ export const Navbar: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <a href="/#templates" className="px-3.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+                  <Link
+                    to="/templates"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-medium transition ${
+                      isActive('/templates')
+                        ? 'bg-brand-50 text-brand-700 font-semibold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
                     Templates
-                  </a>
+                  </Link>
                   <a href="/#categories" className="px-3.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
                     Departments
                   </a>
@@ -181,6 +198,13 @@ export const Navbar: React.FC = () => {
                   className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
                   Dashboard
+                </Link>
+                <Link
+                  to="/templates"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  SOP Templates
                 </Link>
                 <Link
                   to="/documents"

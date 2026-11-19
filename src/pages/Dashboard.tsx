@@ -36,6 +36,7 @@ import type { SOPDocument, SOPStatus, SOPCategory, SOPSuite } from '../types/sop
 import { CATEGORIES } from '../types/sop';
 import { generateVisualSOPPdfFromData } from '../lib/pdfGenerator';
 import { TemplateGallery } from '../components/TemplateGallery';
+import { DepartmentTemplateList } from '../components/DepartmentTemplateList';
 
 type DashboardTab = 'dashboard' | 'my-sops' | 'templates';
 
@@ -50,6 +51,7 @@ export const Dashboard: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [templateSubTab, setTemplateSubTab] = useState<'department-sops' | 'layouts'>('department-sops');
 
   const loadDocs = async () => {
     if (!user) return;
@@ -718,10 +720,45 @@ export const Dashboard: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 3: TEMPLATES GALLERY (11 VISUAL PREVIEWS) */}
+          {/* TAB 3: TEMPLATES GALLERY & DEPARTMENT SOPS */}
           {activeTab === 'templates' && (
             <div className="space-y-6">
-              <TemplateGallery />
+              <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl w-fit">
+                <button
+                  type="button"
+                  onClick={() => setTemplateSubTab('department-sops')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+                    templateSubTab === 'department-sops'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Department SOP Library
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplateSubTab('layouts')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+                    templateSubTab === 'layouts'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  A4 Layout Structures
+                </button>
+              </div>
+
+              {templateSubTab === 'department-sops' ? (
+                <DepartmentTemplateList
+                  onSelectTemplate={(tpl) =>
+                    navigate(
+                      `/sop/new?templateId=${encodeURIComponent(tpl.id)}&department=${encodeURIComponent(tpl.departmentId)}`
+                    )
+                  }
+                />
+              ) : (
+                <TemplateGallery />
+              )}
             </div>
           )}
 

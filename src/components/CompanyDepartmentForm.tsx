@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   Building2,
   Globe2,
@@ -13,6 +14,7 @@ import {
   Info,
 } from 'lucide-react';
 import type { SOPCategory, CompanyInfoFormData } from '../types/sop';
+import type { DepartmentTopic } from '../data/departmentTemplates';
 
 interface CompanyDepartmentFormProps {
   departmentId: SOPCategory;
@@ -23,6 +25,8 @@ interface CompanyDepartmentFormProps {
   onDepartmentDetailChange: (key: string, value: string) => void;
   onSubmit: () => void;
   onBack: () => void;
+  selectedTemplate?: DepartmentTopic | null;
+  onGenerateSingleSOP?: () => void;
 }
 
 interface QuestionField {
@@ -418,6 +422,8 @@ export const CompanyDepartmentForm: React.FC<CompanyDepartmentFormProps> = ({
   onDepartmentDetailChange,
   onSubmit,
   onBack,
+  selectedTemplate,
+  onGenerateSingleSOP,
 }) => {
   const departmentQuestions = DEPARTMENT_QUESTIONS[departmentId] || DEFAULT_DEPARTMENT_QUESTIONS;
 
@@ -463,6 +469,43 @@ export const CompanyDepartmentForm: React.FC<CompanyDepartmentFormProps> = ({
             </strong>{' '}
             customized to your exact organizational structure, operational activities, and regulatory standards.
           </p>
+
+          {/* Loaded Template Banner */}
+          {selectedTemplate && (
+            <div className="mt-4 p-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-slate-950 font-black text-[10px] uppercase tracking-wider">
+                    Selected Template
+                  </span>
+                  <span className="text-xs text-emerald-300 font-mono font-semibold">
+                    {selectedTemplate.id}
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-white">
+                  {selectedTemplate.title}
+                </h3>
+                <p className="text-xs text-emerald-100/80 max-w-2xl">
+                  {selectedTemplate.description}
+                </p>
+                {selectedTemplate.referencedStandards && selectedTemplate.referencedStandards.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {selectedTemplate.referencedStandards.map((std, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded-md bg-white/10 text-emerald-200 text-[10px] font-medium">
+                        {std}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <Link
+                to={`/templates?department=${departmentId}`}
+                className="shrink-0 px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition"
+              >
+                Change Template
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
@@ -803,7 +846,19 @@ export const CompanyDepartmentForm: React.FC<CompanyDepartmentFormProps> = ({
             ← Change Department
           </button>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            {selectedTemplate && onGenerateSingleSOP && (
+              <button
+                type="button"
+                onClick={onGenerateSingleSOP}
+                disabled={!isFormValid}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Generate This SOP ({selectedTemplate.title.slice(0, 24)}...)</span>
+              </button>
+            )}
+
             <button
               type="submit"
               disabled={!isFormValid}

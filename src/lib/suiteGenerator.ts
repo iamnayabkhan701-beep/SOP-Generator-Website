@@ -13,7 +13,7 @@ import type {
 } from '../types/sop';
 import { getSOPsForDepartment } from '../data/sopLibraryRegistry';
 import type { DepartmentTopic } from '../data/departmentTemplates';
-import { createMultipleSOPDocuments, saveSOPSuite } from './supabase';
+import { createMultipleSOPDocuments, saveSOPSuite, createSOPDocument } from './supabase';
 import { getAutomaticSOPImages } from './imageFetcher';
 
 interface GenerateSuiteOptions {
@@ -566,4 +566,43 @@ function buildTopicMetrics(topic: DepartmentTopic, deptId: SOPCategory): { title
       { label: 'Audit Trail & Record Completion SLA', current: 100, target: 100, unit: '%', status: 'optimal' },
     ],
   };
+}
+
+/**
+ * Generates and saves a single stand-alone SOP document directly from a researched DepartmentTopic.
+ */
+export async function generateSingleSOPFromTopic(options: {
+  topic: DepartmentTopic;
+  companyInfo: CompanyInfoFormData;
+  theme: SOPTheme;
+  structure: SOPStructure;
+  userId: string;
+}): Promise<SOPDocument> {
+  const { topic, companyInfo, theme, structure, userId } = options;
+  const sopCode = `SOP-${topic.departmentId.toUpperCase().slice(0, 3)}-001`;
+  const docFormData = buildDocumentFormData(topic, companyInfo, topic.departmentId, sopCode);
+  const generatedContent = buildCompleteSOPContent(topic, docFormData, companyInfo, topic.departmentId, sopCode, structure);
+
+  const docId = crypto.randomUUID();
+  const doc: SOPDocument = {
+    id: docId,
+    user_id: userId,
+    title: topic.title,
+    category: topic.departmentId,
+    selected_topic: topic.topicName || topic.title,
+    theme,
+    structure,
+    target_page_count: topic.estimatedPages || 3,
+    status: 'ready',
+    form_data: docFormData,
+    generated_content: generatedContent,
+    edited_content: generatedContent,
+    actual_page_count: topic.estimatedPages || 3,
+    version: 1,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  await createSOPDocument(doc);
+  return doc;
 }

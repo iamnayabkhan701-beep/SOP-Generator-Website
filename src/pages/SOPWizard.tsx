@@ -28,7 +28,8 @@ import {
   type SOPDocument,
 } from '../types/sop';
 import { getSOPsForDepartment } from '../data/sopLibraryRegistry';
-import { generateDepartmentSOPSuite } from '../lib/suiteGenerator';
+import { getTopicById, type DepartmentTopic } from '../data/departmentTemplates';
+import { generateDepartmentSOPSuite, generateSingleSOPFromTopic } from '../lib/suiteGenerator';
 import { fetchDocumentById } from '../lib/supabase';
 
 export const SOPWizard: React.FC = () => {
@@ -43,6 +44,7 @@ export const SOPWizard: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<SOPCategory>('warehouse');
   const [selectedTheme, setSelectedTheme] = useState<SOPTheme>('corporate-black');
   const [selectedStructure, setSelectedStructure] = useState<SOPStructure>('standard');
+  const [loadedTopic, setLoadedTopic] = useState<DepartmentTopic | null>(null);
 
   // Company Information State
   const [companyInfo, setCompanyInfo] = useState<CompanyInfoFormData>({
@@ -62,6 +64,43 @@ export const SOPWizard: React.FC = () => {
     version: '1.0',
     departmentDetails: {},
   });
+
+  // Pre-load template if query params exist (e.g. from /templates)
+  useEffect(() => {
+    const templateId = searchParams.get('templateId');
+    const deptParam = searchParams.get('department') as SOPCategory | null;
+
+    if (templateId) {
+      const topic = getTopicById(templateId);
+      if (topic) {
+        setLoadedTopic(topic);
+        setSelectedCategory(topic.departmentId);
+        if (topic.structure) {
+          setSelectedStructure(topic.structure);
+        }
+        const cat = CATEGORIES.find((c) => c.id === topic.departmentId);
+        setCompanyInfo((prev) => ({
+          ...prev,
+          departmentName: cat?.name || topic.departmentId,
+          applicableStandards:
+            topic.referencedStandards && topic.referencedStandards.length > 0
+              ? topic.referencedStandards
+              : prev.applicableStandards,
+          mainOperationalActivities: topic.description || prev.mainOperationalActivities,
+        }));
+        setStep(2);
+      }
+    } else if (deptParam) {
+      const cat = CATEGORIES.find((c) => c.id === deptParam);
+      if (cat) {
+        setSelectedCategory(deptParam);
+        setCompanyInfo((prev) => ({
+          ...prev,
+          departmentName: cat.name,
+        }));
+      }
+    }
+  }, [searchParams]);
 
   // Generation Progress State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -145,6 +184,38 @@ export const SOPWizard: React.FC = () => {
       navigate(`/suite/${suite.id}`);
     } catch (err: any) {
       console.error('Suite generation error:', err);
+      alert('Generation encountered a problem: ' + err.message);
+      setIsGenerating(false);
+    }
+  };
+
+  // Synthesize single SOP document directly from loaded topic
+  const handleGenerateSingleTopic = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (!loadedTopic) return;
+
+    setIsGenerating(true);
+    setProgressState({
+      current: 1,
+      total: 1,
+      message: `Synthesizing ${loadedTopic.title}...`,
+    });
+
+    try {
+      const doc = await generateSingleSOPFromTopic({
+        topic: loadedTopic,
+        companyInfo,
+        theme: selectedTheme,
+        structure: selectedStructure,
+        userId: user.id,
+      });
+
+      navigate(`/sop/${doc.id}/preview`);
+    } catch (err: any) {
+      console.error('Single SOP generation error:', err);
       alert('Generation encountered a problem: ' + err.message);
       setIsGenerating(false);
     }
@@ -258,6 +329,8 @@ export const SOPWizard: React.FC = () => {
               setStep(1);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            selectedTemplate={loadedTopic}
+            onGenerateSingleSOP={loadedTopic ? handleGenerateSingleTopic : undefined}
           />
         )}
 

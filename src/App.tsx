@@ -9,6 +9,7 @@ import { Dashboard } from './pages/Dashboard';
 import { SOPWizard } from './pages/SOPWizard';
 import { SOPPreview } from './pages/SOPPreview';
 import { SOPSuiteViewer } from './pages/SOPSuiteViewer';
+import { SOPTemplatesPage } from './pages/SOPTemplatesPage';
 import { Settings } from './pages/Settings';
 import { AdminPanel } from './pages/AdminPanel';
 
@@ -40,6 +41,7 @@ export const AppContent: React.FC = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/templates" element={<SOPTemplatesPage />} />
           <Route path="/login" element={<AuthPages initialMode="login" />} />
           <Route path="/signup" element={<AuthPages initialMode="signup" />} />
           <Route path="/forgot-password" element={<AuthPages initialMode="forgot" />} />
